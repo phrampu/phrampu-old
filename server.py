@@ -26,9 +26,7 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-type','application/json')
             self.end_headers()
 
-            self.wfile.write(dumps(
-                {'response': getWho()}).encode()
-            )
+            self.wfile.write(dumps({'response': getWho()}).encode())
         else:
             self.send_response(403)
             self.send_header('Content-Type', 'application/json')
