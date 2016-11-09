@@ -1,11 +1,31 @@
 #!/usr/bin/python3
 
+import pprint
 import re
 import subprocess
+import csv
 from json import dumps, loads, JSONEncoder, JSONDecoder
 from http.server import BaseHTTPRequestHandler,HTTPServer
 
 PORT = 57888
+LDBPATH = "/p/lname/lname.db"
+
+lnameDict = {}
+
+def lname():
+    with open(LDBPATH, 'r') as ldb:
+        ldbreader = csv.reader(ldb, delimiter=':', quotechar='|')
+        for row in ldbreader:
+            firstComma = row[1].find(',')
+            lnameDict[row[0]] = {
+                "careerAcc": row[0],
+                "name": row[1][:firstComma],
+                "email": row[2],
+            }
+lname()
+
+#pp = pprint.PrettyPrinter(indent=4)
+#pp.pprint(lnameDict)
 
 def getWho():
     # Split who on new lines
@@ -17,7 +37,14 @@ def getWho():
     # Remove empty strings
     who = filter(None, who)
 
-    return list(set(who))
+    # Remove duplicates
+    who = list(set(who))
+
+    whoList = []
+    for person in who:
+        whoList.append(lnameDict[person])
+
+    return whoList
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
