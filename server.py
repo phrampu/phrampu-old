@@ -5,48 +5,25 @@ import paramiko, base64
 import re
 import subprocess
 import csv
+import os
+import requests
+import zerorpc
+import yaml
 from json import dumps, loads, JSONEncoder, JSONDecoder
 from http.server import BaseHTTPRequestHandler,HTTPServer
 
 PORT = 57888
 LDBPATH = "/p/lname/lname.db"
-MACHINES = {
-    "xinu": [
-        "xinu01.cs.purdue.edu",
-        "xinu02.cs.purdue.edu",
-        "xinu03.cs.purdue.edu",
-        "xinu04.cs.purdue.edu",
-        "xinu05.cs.purdue.edu",
-        "xinu06.cs.purdue.edu",
-        "xinu07.cs.purdue.edu",
-    ],
-    "borg": [
-        "borg01.cs.purdue.edu",
-    ],
-    "sslab": [
-        "sslab00.cs.purdue.edu",
-        "sslab01.cs.purdue.edu",
-        "sslab02.cs.purdue.edu",
-        "sslab03.cs.purdue.edu",
-        "sslab04.cs.purdue.edu",
-        "sslab05.cs.purdue.edu",
-        "sslab06.cs.purdue.edu",
-    ],
-    "data": [
-        "data.cs.purdue.edu",
-    ],
-    "lore": [
-        "lore.cs.purdue,edu",
-    ],
-}
-PASSWORD = '???'
-USERNAME = '???'
+PASSWORD = os.environ.get('PHRAMPU_PASS')
+USERNAME = os.environ.get('PHRAMPU_USER')
+MACHINES = yaml.load(open('servers.yaml', 'r'))
 
 client = paramiko.SSHClient()
 client.load_system_host_keys()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
 lnameDict = {}
+connections = {}
 
 def lname():
     with open(LDBPATH, 'r') as ldb:
@@ -60,43 +37,49 @@ def lname():
             }
 lname()
 
-def runWho():
+def runWhoLocally():
     # Run + split who on new lines
     return subprocess.check_output("who").decode().split('\n')
 
 def formatWho(who):
-    # Get first column
-    who = [line.split(' ')[0] for line in who]
+    who = list(filter(None, who))
 
-    # Remove empty strings
-    who = filter(None, who)
+    # First col (username)
+    whoCol1 = [line.split()[0] for line in who]
 
-    # Remove duplicates
-    who = list(set(who))
+    # Second col (tty/pts)
+    whoCol2 = [line.split()[1] for line in who]
+
+    whoZip = list(zip(whoCol1, whoCol2))
 
     whoList = []
-    for person in who:
-        whoList.append(lnameDict[person])
+    for (careerAcc, device) in whoZip:
+        whoList.append({
+            'careerAcc': careerAcc,
+            'device': device,
+        })
 
     return whoList
 
-#@lru_cache(maxsize=16)
-def sshAndGetWho(hostname):
-    print("sshing into ", hostname)
-    who = []
+def getAlive(hostname):
+    req = None
     try:
-        client.connect(hostname, username=USERNAME, password=PASSWORD, look_for_keys=False)
-        stdin, stdout, stderr = client.exec_command('who')
-        for line in stdout:
-            who.append(line[:-2])
-        client.close()
+        req = requests.get('http://' + hostname + ':' + str(PORT) + '/check')
+        if req:
+            return True
     except:
         pass
-    return who
+    return False
 
-
-#pp = pprint.PrettyPrinter(indent=4)
-#pp.pprint(lnameDict)
+def getWho(hostname):
+    req = None
+    try:
+        req = requests.get('http://' + hostname + ':' + str(PORT) + '/who')
+        if req:
+            return req.json()
+    except:
+        pass
+    return None
 
 
 class handler(BaseHTTPRequestHandler):
@@ -106,36 +89,58 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-type','application/json')
             self.end_headers()
 
-            self.wfile.write(dumps({'response': formatWho(runWho())}).encode())
+            self.wfile.write(dumps({'response': formatWho(runWhoLocally())}).encode())
+
+        ### deprecated ###
         elif None != re.search('/master', self.path):
             self.send_response(200)
             self.send_header('Content-type','application/json')
             self.end_headers()
 
-            response = {}
-            for cluster in MACHINES:
-                response[cluster] = {}
-                for machine in MACHINES[cluster]:
-                    response[cluster][machine] = formatWho(sshAndGetWho(machine))
-            self.wfile.write(dumps({'response': response}).encode())
+            self.wfile.write(dumps({'response': 'deprecated'}).encode())
+
         elif None != re.search('/find', self.path):
             user = self.path[self.path.find('find') + 5:]
             self.send_response(200)
             self.send_header('Content-type','application/json')
             self.end_headers()
 
+            self.wfile.write(dumps({'response': 'deprecated'}).encode())
+        #####
+
+        elif None != re.search('/check', self.path):
+            self.send_response(200)
+            self.send_header('Content-type','application/json')
+            self.end_headers()
+            self.wfile.write(dumps({'alive': 'yes'}).encode())
+
+        elif None != re.search('/api/cluster', self.path):
+            cluster = self.path[self.path.find('cluster') + 8:]
+            self.send_response(200)
+            self.send_header('Content-type','application/json')
+            self.end_headers()
             response = {}
-            response['user'] = {}
-            response['machines'] = {}
-            for cluster in MACHINES:
+            if cluster in MACHINES:
+                response[cluster] = []
                 for machine in MACHINES[cluster]:
-                    dic = formatWho(sshAndGetWho(machine))
-                    for userDict in dic:
-                        if userDict['careerAcc'] == user:
-                            response['user'] = userDict
-                            response['machines'][cluster] = machine
-            
+                    who = getWho(machine)
+                    response[cluster].append({
+                        'hostname': machine,
+                        'alive': 'yes' if who != None else 'no',
+                        'response': who['response'] if who != None else {}
+                    })
+                
             self.wfile.write(dumps({'response': response}).encode())
+        elif None != re.search('/api/host/', self.path):
+            host = self.path[self.path.find('host') + 5:]
+            self.send_response(200)
+            self.send_header('Content-type','application/json')
+            self.end_headers()
+            response = getWho(host)
+            if response == None:
+                response = {'response': 'not alive'}
+            
+            self.wfile.write(dumps({'response': response['response']}).encode())
         else:
             self.send_response(403)
             self.send_header('Content-Type', 'application/json')
@@ -144,7 +149,6 @@ class handler(BaseHTTPRequestHandler):
 try:
     server = HTTPServer(('', PORT), handler)
     print('STARTING ON ' , PORT)
-    
     server.serve_forever()
 
 except KeyboardInterrupt:
