@@ -173,6 +173,3 @@ clusters:
   lore:
     hostnames:
       - lore.cs.purdue.edu
-  data:
-    hostnames:
-      - data.cs.purdue.edu
