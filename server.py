@@ -91,14 +91,25 @@ class handler(BaseHTTPRequestHandler):
 
             self.wfile.write(dumps({'response': formatWho(runWhoLocally())}).encode())
 
-        ### deprecated ###
-        elif None != re.search('/master', self.path):
+        elif None != re.search('/api/master', self.path):
             self.send_response(200)
             self.send_header('Content-type','application/json')
             self.end_headers()
+            response = {}
+            for cluster in MACHINES['clusters']:
+                response[cluster] = []
+                for machine in MACHINES['clusters'][cluster]['hostnames']:
+                    print('getting ', machine)
+                    who = getWho(machine)
+                    response[cluster].append({
+                        'hostname': machine,
+                        'alive': 'yes' if who != None else 'no',
+                        'users': who['response'] if who != None else []
+                    })
+                
+            self.wfile.write(dumps({'response': response}).encode())
 
-            self.wfile.write(dumps({'response': 'deprecated'}).encode())
-
+        ### not working atm
         elif None != re.search('/find', self.path):
             user = self.path[self.path.find('find') + 5:]
             self.send_response(200)
@@ -120,12 +131,12 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-type','application/json')
             self.end_headers()
             response = {}
-            if cluster in MACHINES:
+            if cluster in MACHINES['clusters']:
                 response[cluster] = []
-                for machine in MACHINES[cluster]:
-                    who = getWho(machine)
+                for hostname in MACHINES['clusters'][cluster]['hostnames']:
+                    who = getWho(hostname)
                     response[cluster].append({
-                        'hostname': machine,
+                        'hostname': hostname,
                         'alive': 'yes' if who != None else 'no',
                         'response': who['response'] if who != None else {}
                     })
