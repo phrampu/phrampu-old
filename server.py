@@ -94,6 +94,7 @@ class handler(BaseHTTPRequestHandler):
         elif None != re.search('/api/master', self.path):
             self.send_response(200)
             self.send_header('Content-type','application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             response = {}
             for cluster in MACHINES['clusters']:
