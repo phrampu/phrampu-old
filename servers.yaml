@@ -142,6 +142,34 @@ clusters:
       - sslab22.cs.purdue.edu
       - sslab23.cs.purdue.edu
       - sslab24.cs.purdue.edu
+  escher:
+    room: "HAAS G056"
+    camera: http://haasg056-cam.cs.purdue.edu/axis-cgi/jpg/image.cgi
+    hostnames:
+      - escher00.cs.purdue.edu 
+      - escher01.cs.purdue.edu 
+      - escher02.cs.purdue.edu 
+      - escher03.cs.purdue.edu 
+      - escher04.cs.purdue.edu 
+      - escher05.cs.purdue.edu 
+      - escher06.cs.purdue.edu 
+      - escher07.cs.purdue.edu 
+      - escher08.cs.purdue.edu 
+      - escher09.cs.purdue.edu 
+      - escher10.cs.purdue.edu 
+      - escher11.cs.purdue.edu 
+      - escher12.cs.purdue.edu 
+      - escher13.cs.purdue.edu 
+      - escher14.cs.purdue.edu 
+      - escher15.cs.purdue.edu 
+      - escher16.cs.purdue.edu 
+      - escher17.cs.purdue.edu 
+      - escher18.cs.purdue.edu 
+      - escher19.cs.purdue.edu 
+      - escher20.cs.purdue.edu 
+      - escher21.cs.purdue.edu 
+      - escher22.cs.purdue.edu 
+      - escher23.cs.purdue.edu 
   lore:
     hostnames:
       - lore.cs.purdue.edu
