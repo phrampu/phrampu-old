@@ -5,5 +5,5 @@ To-do:
     - [ ] Fix all the other endpoints that are broken
     - [ ] Standardize api responses and document
   - Frontend:
-    - Filtering by tty/pts
-    - Display traffic graph/heatmap (d3)
+    - [ ] Filtering by tty/pts
+    - [ ] Display traffic graph/heatmap (d3)
