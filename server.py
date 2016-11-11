@@ -1,6 +1,6 @@
 #!/usr/bin/python3
-
 import pprint
+import threading
 import paramiko, base64
 import re
 import subprocess
@@ -11,20 +11,35 @@ import zerorpc
 import yaml
 from json import dumps, loads, JSONEncoder, JSONDecoder
 from http.server import BaseHTTPRequestHandler,HTTPServer
+from socketserver import ThreadingMixIn
 import time
 
 PORT = 57888
 LDBPATH = "/p/lname/lname.db"
+THREADS = 4
 PASSWORD = os.environ.get('PHRAMPU_PASS')
 USERNAME = os.environ.get('PHRAMPU_USER')
 MACHINES = yaml.load(open('servers.yaml', 'r'))
 
-client = paramiko.SSHClient()
-client.load_system_host_keys()
-client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
 
 lnameDict = {}
 connections = {}
+whoCache = {}
+hostnames = []
+hostnameToCluster = {}
+for cluster in MACHINES['clusters']:
+    for hostname in MACHINES['clusters'][cluster]['hostnames']:
+        hostnames.append(hostname)
+        hostnameToCluster[hostname] = cluster
+        if cluster not in whoCache:
+            whoCache[cluster] = {}
+hostnamesChunked = list(chunks(hostnames, len(hostnames)//THREADS))
+threads = []
+clients = []
 
 def lname():
     with open(LDBPATH, 'r') as ldb:
@@ -37,6 +52,20 @@ def lname():
                 "email": row[2],
             }
 lname()
+
+def sshAndGetWho(i, hostname):
+    print("sshing into ", hostname)
+    who = []
+    try:
+        clients[i].connect(hostname, username=USERNAME, password=PASSWORD, look_for_keys=False)
+        stdin, stdout, stderr = clients[i].exec_command('who')
+        for line in stdout:
+            who.append(line[:-2])
+        clients[i].close()
+    except Exception as e:
+        print(e)
+        pass
+    return who
 
 def runWhoLocally():
     # Run + split who on new lines
@@ -53,14 +82,30 @@ def formatWho(who):
 
     whoZip = list(zip(whoCol1, whoCol2))
 
-    whoList = []
+    # {'schwar12': ['tty7', 'pts/0', 'pts/1'], ...}
+    whoList = {}
     for (careerAcc, device) in whoZip:
-        whoList.append({
-            'careerAcc': careerAcc,
-            'device': device,
-        })
+        if careerAcc in whoList:
+            whoList[careerAcc].append(device)
+        else:
+            whoList[careerAcc] = [device]
 
     return whoList
+
+
+def sshWorker(i, hostname):
+    global whoCache
+    cluster = hostnameToCluster[hostname]
+    whoCache[cluster][hostname] = formatWho(sshAndGetWho(i, hostname))
+    #pprint.pprint(whoCache)
+
+def slaveDriverThread(i):
+    while True:
+        for hostname in hostnamesChunked[i]:
+            print('thread ', i, 'sshing to ', hostname)
+            sshWorker(i, hostname)
+            time.sleep(5)
+    return
 
 def getAlive(hostname):
     req = None
@@ -82,7 +127,6 @@ def getWho(hostname):
         pass
     return None
 
-
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if None != re.search('/who', self.path):
@@ -97,19 +141,8 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-type','application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            response = {}
-            for cluster in MACHINES['clusters']:
-                response[cluster] = []
-                for machine in MACHINES['clusters'][cluster]['hostnames']:
-                    print('getting ', machine)
-                    who = getWho(machine)
-                    response[cluster].append({
-                        'hostname': machine,
-                        'alive': 'yes' if who != None else 'no',
-                        'users': who['response'] if who != None else []
-                    })
 
-            self.wfile.write(dumps({'response': response}).encode())
+            self.wfile.write(dumps({'response': whoCache}).encode())
 
         elif None != re.search('/find', self.path):
             user = self.path[self.path.find('find') + 5:]
@@ -172,11 +205,25 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
 
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+        """Handle requests in a separate thread."""
+
+for i in range(THREADS):
+    t = threading.Thread(target=slaveDriverThread, args=(i,))
+    client = paramiko.SSHClient()
+    client.load_system_host_keys()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    clients.append(client)
+    threads.append(t)
+    t.start()
+    time.sleep(1.5)
 try:
-    server = HTTPServer(('', PORT), handler)
+    server = ThreadedHTTPServer(('', PORT), handler)
     print('STARTING ON ' , PORT)
     server.serve_forever()
 
 except KeyboardInterrupt:
     print('SHUTTING DOWN')
     server.socket.close()
+
+
