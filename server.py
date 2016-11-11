@@ -218,7 +218,7 @@ class handler(BaseHTTPRequestHandler):
                         'alive': 'yes' if who != None else 'no',
                         'response': who['response'] if who != None else {}
                     })
-                
+
             self.wfile.write(dumps({'response': response}).encode())
         elif None != re.search('/api/host/', self.path):
             host = self.path[self.path.find('host') + 5:]
@@ -228,7 +228,7 @@ class handler(BaseHTTPRequestHandler):
             response = getWho(host)
             if response == None:
                 response = {'response': 'not alive'}
-            
+
             self.wfile.write(dumps({'response': response['response']}).encode())
         else:
             self.send_response(403)
