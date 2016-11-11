@@ -4,10 +4,6 @@
   <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.6.1/js-yaml.js"></script>
   <script type="text/javascript">
-      $.get('../servers.yaml', function(data) {
-        var doc = jsyaml.load(data);
-        console.log(doc);
-      });
   </script>
 <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css'/>
 </head>
@@ -18,7 +14,7 @@
           Used lab machines:
           <ul>
             <li v-for="(count, cluster) in clusters">
-              {{ cluster }} - {{ count }} / {{ maxes[cluster] }}
+             {{ yaml['clusters'][cluster]['room'] }} - {{ cluster }} - {{ count }} / {{ maxes[cluster] }}
             </li>
           </ul>
           Logged into Lawson machines:
@@ -42,6 +38,7 @@
         users: null,
         clusters: null,
         maxes: null,
+        yaml: null,        
       },
 
       created: function() {
@@ -87,6 +84,10 @@
                     }
                 }
             }
+          });
+          $.get('../servers.yaml', function(data) {
+            var doc = jsyaml.load(data);
+            self.yaml = doc;
           });
         }
       }
