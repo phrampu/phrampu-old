@@ -47,7 +47,7 @@ mongodb = mongo.phrampu
 mongologs = mongodb.logs
 
 # clears db if needed
-#mongologs.drop()
+mongologs.drop()
 
 
 def lname():
@@ -119,7 +119,9 @@ def sshWorker(i, hostname):
           'cluster': cluster,
           'devices': who['devices'],
           'timestamp': who['timestamp'],
-          'lname': who['lname'],
+          'name': who['lname']['name'],
+          'email': who['lname']['email'],
+          'careerAcc': who['lname']['careerAcc'],
         }).inserted_id
     #pprint.pprint(whoCache)
 
@@ -233,7 +235,7 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
         """Handle requests in a separate thread."""
 
 for i in range(THREADS):
-    t = threading.Thread(target=slaveDriverThread, args=(i,))
+    t = threading.Thread(target=slaveDriverThread, args=(i,), daemon=True)
     client = paramiko.SSHClient()
     client.load_system_host_keys()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
