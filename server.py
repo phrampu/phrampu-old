@@ -11,7 +11,6 @@ import zerorpc
 import yaml
 from json import dumps, loads, JSONEncoder, JSONDecoder
 from http.server import BaseHTTPRequestHandler,HTTPServer
-import time
 
 PORT = 57888
 LDBPATH = "/p/lname/lname.db"
