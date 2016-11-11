@@ -82,13 +82,23 @@ def formatWho(who):
 
     whoZip = list(zip(whoCol1, whoCol2))
 
-    # {'schwar12': ['tty7', 'pts/0', 'pts/1'], ...}
-    whoList = {}
+    # {
+    #    'careerAcc': 'schwar12', 
+    #    'name': 'Austin Schwartz',
+    #    'devices': ['tty7', 'pts/0', 'pts/1'], 
+    #}
+    whoList = []
     for (careerAcc, device) in whoZip:
-        if careerAcc in whoList:
-            whoList[careerAcc].append(device)
-        else:
-            whoList[careerAcc] = [device]
+        found = False
+        for data in whoList:
+            if data['lname']['careerAcc'] == careerAcc:
+                data['devices'].append(device)
+                found = True
+        if not found:
+            whoList.append({
+                'lname': lnameDict[careerAcc],
+                'devices': [device],
+            })
 
     return whoList
 
