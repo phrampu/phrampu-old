@@ -7,10 +7,13 @@ client = paramiko.SSHClient()
 client.load_system_host_keys()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
+def start_server(mach):
+    current_directory = subprocess.getstatusoutput("pwd")
+    subprocess.getstatusoutput(
+        "ssh " + mach + " 'cd " + current_directory[1] +
+        " && nohup python3 server.py &> /dev/null < /dev/null &'")
+
 for cluster in MACHINES['clusters']:
     for machine in MACHINES['clusters'][cluster]['hostnames']:
         print('initializing server on ', machine)
-        current_directory=subprocess.getstatusoutput("pwd")
-        subprocess.getstatusoutput(
-            "ssh sslab00 'cd " + current_directory[1] +
-            " && nohup python3 server.py &> /dev/null < /dev/null &'")
+        start_server(machine)
