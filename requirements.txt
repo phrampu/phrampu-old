@@ -6,3 +6,5 @@ paramiko==2.0.2
 pyzmq==16.0.0
 simplejson==3.8.1
 zerorpc==0.6.0
+requests==2.11.1
+PyYAML==3.12

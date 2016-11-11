@@ -11,6 +11,7 @@ import zerorpc
 import yaml
 from json import dumps, loads, JSONEncoder, JSONDecoder
 from http.server import BaseHTTPRequestHandler,HTTPServer
+import time
 
 PORT = 57888
 LDBPATH = "/p/lname/lname.db"
@@ -107,18 +108,31 @@ class handler(BaseHTTPRequestHandler):
                         'alive': 'yes' if who != None else 'no',
                         'users': who['response'] if who != None else []
                     })
-                
+
             self.wfile.write(dumps({'response': response}).encode())
 
-        ### not working atm
         elif None != re.search('/find', self.path):
             user = self.path[self.path.find('find') + 5:]
             self.send_response(200)
             self.send_header('Content-type','application/json')
             self.end_headers()
 
-            self.wfile.write(dumps({'response': 'deprecated'}).encode())
-        #####
+            response = {}
+            for cluster in MACHINES['clusters']:
+                response[cluster] = []
+                for machine in MACHINES['clusters'][cluster]['hostnames']:
+                    print('getting ', machine)
+                    who = getWho(machine)
+                    results=[element for element in who['response'] if element['careerAcc'] == user] if who is not None else []
+                    if results:
+                        response[cluster].append({
+                            'hostname': machine,
+                            'tty': [device['device'] for device in results]
+                        })
+                if not response[cluster]:
+                    del response[cluster]
+
+            self.wfile.write(dumps({'response': response}).encode())
 
         elif None != re.search('/check', self.path):
             self.send_response(200)
