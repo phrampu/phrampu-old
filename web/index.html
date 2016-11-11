@@ -2,36 +2,46 @@
 <head>
   <title>hi</title>
   <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.6.1/js-yaml.js"></script>
+  <script type="text/javascript">
+      $.get('../servers.yaml', function(data) {
+        var doc = jsyaml.load(data);
+        console.log(doc);
+      });
+  </script>
 <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css'/>
 </head>
 <body>
   <div class="container">
     <div class="starter-template">
       <div id="app">
+          Used lab machines:
+          <ul>
+            <li v-for="(count, cluster) in clusters">
+              {{ cluster }} - {{ count }} / {{ maxes[cluster] }}
+            </li>
+          </ul>
           Logged into Lawson machines:
           <ul>
             <li v-for="(machines, user) in users">
-              {{ user }} 
-              <ul>
-                <li v-for="machine in machines">
-                {{ machine.hostname }}
-                <b v-if="!machine.device.startsWith('tty')">SSH</b>
-                </li>
-              </ul>
+              {{ user }} - {{ machines }}
             </li>
+            {{ response }}
           </ul>
       </div>
     </div>
   </div>
   <script src="https://unpkg.com/vue/dist/vue.js"></script>
   <script>
-    var url = "http://data.cs.purdue.edu:57888/api/master";
+    var url = "http://pod2-4.cs.purdue.edu:57888/api/master";
     var app = new Vue({
       el: '#app',
 
       data: {
         response: null,
-        users: null
+        users: null,
+        clusters: null,
+        maxes: null,
       },
 
       created: function() {
@@ -42,26 +52,41 @@
         fetchData: function () {
           var self = this;
           $.getJSON( url, function( data ) {
-            self.response = data;
+            self.response = data['response'];
             map = {};
             for (var cluster in data['response']) {
               for (var host in data['response'][cluster]) {
                 var hostData = data['response'][cluster][host];
-                for (var user in hostData['users']) {
-                  var careerAcc = hostData['users'][user]['careerAcc'];
+                for (var user in hostData) {
                   var e = {
-                      'hostname': hostData['hostname'],
-                      'device': hostData['users'][user]['device'],
+                      'hostname': host,
+                      'devices': hostData[user],
                   };
-                  
-                  if (careerAcc in map)
-                    map[careerAcc].push(e);
+                  if (user in map)
+                    map[user].push(e);
                   else
-                    map[careerAcc] = [e];
+                    map[user] = [e];
                 }
               }
             }
             self.users = map;
+            var x = self.response;
+            self.clusters = {}
+            self.maxes = {}
+            for (var host in x) {
+                if (host == 'data' || host == 'lore') continue;
+                self.clusters[host] = 0;
+                self.maxes[host] = Object.keys(x[host]).length;
+                for (var hostname in x[host]) {
+                    for (var user in x[host][hostname]) {
+                        var list = x[host][hostname][user];
+                        for (var device in list) {
+                            if (list[device].startsWith('tty'))
+                                self.clusters[host] += 1;
+                        }
+                    }
+                }
+            }
           });
         }
       }
