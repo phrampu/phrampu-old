@@ -13,6 +13,7 @@ from json import dumps, loads, JSONEncoder, JSONDecoder
 from http.server import BaseHTTPRequestHandler,HTTPServer
 from socketserver import ThreadingMixIn
 import time
+import logging
 
 PORT = 57888
 LDBPATH = "/p/lname/lname.db"
@@ -20,6 +21,9 @@ THREADS = 4
 PASSWORD = os.environ.get('PHRAMPU_PASS')
 USERNAME = os.environ.get('PHRAMPU_USER')
 MACHINES = yaml.load(open('servers.yaml', 'r'))
+LOGFILE = "server.log"
+
+logging.basicConfig(filename=LOGFILE, filemode='w', format='%(asctime)s:%(levelname)s:%(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.DEBUG)
 
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
@@ -54,7 +58,7 @@ def lname():
 lname()
 
 def sshAndGetWho(i, hostname):
-    print("sshing into ", hostname)
+    logging.info("sshing into ", hostname)
     who = []
     try:
         clients[i].connect(hostname, username=USERNAME, password=PASSWORD, look_for_keys=False)
@@ -63,7 +67,7 @@ def sshAndGetWho(i, hostname):
             who.append(line[:-2])
         clients[i].close()
     except Exception as e:
-        print(e)
+        logging.error(e)
         pass
     return who
 
@@ -112,7 +116,7 @@ def sshWorker(i, hostname):
 def slaveDriverThread(i):
     while True:
         for hostname in hostnamesChunked[i]:
-            print('thread ', i, 'sshing to ', hostname)
+            logging.info('thread ', i, 'sshing to ', hostname)
             sshWorker(i, hostname)
             time.sleep(5)
     return
@@ -164,7 +168,7 @@ class handler(BaseHTTPRequestHandler):
             for cluster in MACHINES['clusters']:
                 response[cluster] = []
                 for machine in MACHINES['clusters'][cluster]['hostnames']:
-                    print('getting ', machine)
+                    logging.info('getting ', machine)
                     who = getWho(machine)
                     results=[element for element in who['response'] if element['careerAcc'] == user] if who is not None else []
                     if results:
@@ -229,11 +233,11 @@ for i in range(THREADS):
     time.sleep(1.5)
 try:
     server = ThreadedHTTPServer(('', PORT), handler)
-    print('STARTING ON ' , PORT)
+    logging.info('STARTING ON ' , PORT)
     server.serve_forever()
 
 except KeyboardInterrupt:
-    print('SHUTTING DOWN')
+    logging.info('SHUTTING DOWN')
     server.socket.close()
 
 
