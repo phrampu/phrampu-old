@@ -19,8 +19,8 @@
           </ul>
           Logged into Lawson machines:
           <ul>
-            <li v-for="(machines, user) in users">
-              {{ user }} - {{ machines }}
+            <li v-for="(data, user) in users">
+              {{ lnameMap[user]['name'] }} - {{ user }} - {{ data}}
             </li>
             {{ response }}
           </ul>
@@ -39,6 +39,7 @@
         clusters: null,
         maxes: null,
         yaml: null,        
+        lnameMap: {},
       },
 
       created: function() {
@@ -57,12 +58,14 @@
                 for (var user in hostData) {
                   var e = {
                       'hostname': host,
-                      'devices': hostData[user],
+                      'devices': hostData[user]['devices'],
                   };
-                  if (user in map)
-                    map[user].push(e);
+                  var lname = hostData[user]['lname'];
+                  if (lname['careerAcc'] in map)
+                    map[lname['careerAcc']].push(e);
                   else
-                    map[user] = [e];
+                    map[lname['careerAcc']] = [e];
+                  self.lnameMap[lname['careerAcc']] = lname;
                 }
               }
             }
@@ -77,8 +80,8 @@
                 for (var hostname in x[host]) {
                     for (var user in x[host][hostname]) {
                         var list = x[host][hostname][user];
-                        for (var device in list) {
-                            if (list[device].startsWith('tty'))
+                        for (var device in list['devices']) {
+                            if (list['devices'][device].startsWith('tty'))
                                 self.clusters[host] += 1;
                         }
                     }
