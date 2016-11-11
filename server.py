@@ -9,10 +9,12 @@ import os
 import requests
 import zerorpc
 import yaml
+import datetime
 from json import dumps, loads, JSONEncoder, JSONDecoder
 from http.server import BaseHTTPRequestHandler,HTTPServer
 from socketserver import ThreadingMixIn
 import time
+from pymongo import MongoClient
 
 PORT = 57888
 LDBPATH = "/p/lname/lname.db"
@@ -40,6 +42,13 @@ for cluster in MACHINES['clusters']:
 hostnamesChunked = list(chunks(hostnames, len(hostnames)//THREADS))
 threads = []
 clients = []
+mongo = MongoClient('mongodb://austinschwartz.com:27017/')
+mongodb = mongo.phrampu
+mongologs = mongodb.logs
+
+# clears db if needed
+#mongologs.drop()
+
 
 def lname():
     with open(LDBPATH, 'r') as ldb:
@@ -82,11 +91,6 @@ def formatWho(who):
 
     whoZip = list(zip(whoCol1, whoCol2))
 
-    # {
-    #    'careerAcc': 'schwar12', 
-    #    'name': 'Austin Schwartz',
-    #    'devices': ['tty7', 'pts/0', 'pts/1'], 
-    #}
     whoList = []
     for (careerAcc, device) in whoZip:
         found = False
@@ -97,6 +101,7 @@ def formatWho(who):
         if not found:
             whoList.append({
                 'lname': lnameDict[careerAcc],
+                'timestamp': datetime.datetime.now().isoformat(),
                 'devices': [device],
             })
 
@@ -106,7 +111,16 @@ def formatWho(who):
 def sshWorker(i, hostname):
     global whoCache
     cluster = hostnameToCluster[hostname]
-    whoCache[cluster][hostname] = formatWho(sshAndGetWho(i, hostname))
+    whoFormatted = formatWho(sshAndGetWho(i, hostname))
+    whoCache[cluster][hostname] = whoFormatted
+    for who in whoFormatted:
+        mongologs.insert_one({
+          'hostname': hostname,
+          'cluster': cluster,
+          'devices': who['devices'],
+          'timestamp': who['timestamp'],
+          'lname': who['lname'],
+        }).inserted_id
     #pprint.pprint(whoCache)
 
 def slaveDriverThread(i):
