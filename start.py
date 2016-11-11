@@ -1,6 +1,10 @@
 import paramiko
 import yaml
 import subprocess
+import logging
+
+LOGFILE = "server.log"
+logging.basicConfig(filename=LOGFILE, filemode='w', format='%(asctime)s:%(levelname)s:%(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.DEBUG)
 
 MACHINES = yaml.load(open('servers.yaml', 'r'))
 client = paramiko.SSHClient()
@@ -15,5 +19,5 @@ def start_server(mach):
 
 for cluster in MACHINES['clusters']:
     for machine in MACHINES['clusters'][cluster]['hostnames']:
-        print('initializing server on ', machine)
+        logging.info('initializing server on ', machine)
         start_server(machine)
