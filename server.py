@@ -1,13 +1,10 @@
 #!/usr/bin/python3
-import pprint
 import threading
 import paramiko, base64
 import re
 import subprocess
 import csv
 import os
-import requests
-import zerorpc
 import yaml
 import datetime
 from json import dumps, loads, JSONEncoder, JSONDecoder
@@ -18,6 +15,9 @@ from pymongo import MongoClient
 import logging
 import logging.config
 import filters
+import argparse
+import sys
+from flask import Flask, json, Response
 
 PORT = 57888
 LDBPATH = "/p/lname/lname.db"
@@ -27,11 +27,33 @@ USERNAME = os.environ.get('PHRAMPU_USER')
 MACHINES = yaml.load(open('servers.yaml', 'r'))
 
 def configurelogging():
-    with open("filters.yaml", 'r') as the_file:
+    with open('filters.yaml', 'r') as the_file:
         config_dict = yaml.load(the_file)
 
     logging.config.dictConfig(config_dict)
 configurelogging()
+
+logger = logging.getLogger()
+
+def getargs():
+    parser = argparse.ArgumentParser(description='Initial settings for the server')
+    parser.add_argument('-d', '--debug', nargs='?', choices=['DEBUG','INFO','WARNING','ERROR','CRITICAL'],
+            help='the default debug level for logging')
+    parser.add_argument('-v', '--verbose', help='Also output logging information to the console', action='store_true')
+
+    args = parser.parse_args()
+
+    if args.verbose:
+        ch = logging.StreamHandler(sys.stdout)
+        formatter = logging.Formatter('%(asctime)s:%(levelname)-7s:%(message)s', '[%m/%d/%Y %H:%M:%S]')
+        ch.setFormatter(formatter)
+        ch.addFilter(filters.MyFilter())
+        logger.addHandler(ch)
+
+    if args.debug is not None:
+        logger.setLevel(args.debug)
+
+getargs()
 
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
@@ -142,95 +164,30 @@ def slaveDriverThread(i):
             time.sleep(5)
     return
 
-class handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        if None != re.search('/who', self.path):
-            self.send_response(200)
-            self.send_header('Content-type','application/json')
-            self.end_headers()
+app = Flask(__name__)
 
-            self.wfile.write(dumps({'response': formatWho(runWhoLocally())}).encode())
+@app.route("/api/master")
+def api_master():
+    js = json.dumps({'response': whoCache})
+    resp = Response(js, status=200, mimetype='application/json')
+    return resp
 
-        elif None != re.search('/api/master', self.path):
-            self.send_response(200)
-            self.send_header('Content-type','application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
+@app.route("/api/cluster/<cluster_name>")
+def api_cluster():
+    js = json.dumps({'response': whoCache[cluster_name]})
+    resp = Response(js, status=200, mimetype='application/json')
+    return resp
 
-            self.wfile.write(dumps({'response': whoCache}).encode())
+if __name__ == "__main__":
+    app.run(port=PORT)
 
-        elif None != re.search('/find', self.path):
-            user = self.path[self.path.find('find') + 5:]
-            self.send_response(200)
-            self.send_header('Content-type','application/json')
-            self.end_headers()
-
-            response = {}
-            for cluster in MACHINES['clusters']:
-                response[cluster] = []
-                for machine in MACHINES['clusters'][cluster]['hostnames']:
-                    logging.info('getting %s', machine)
-                    who = getWho(machine)
-                    results=[element for element in who['response'] if element['careerAcc'] == user] if who is not None else []
-                    if results:
-                        response[cluster].append({
-                            'hostname': machine,
-                            'tty': [device['device'] for device in results]
-                        })
-                if not response[cluster]:
-                    del response[cluster]
-
-            self.wfile.write(dumps({'response': response}).encode())
-
-        elif None != re.search('/api/cluster', self.path):
-            cluster = self.path[self.path.find('cluster') + 8:]
-            self.send_response(200)
-            self.send_header('Content-type','application/json')
-            self.end_headers()
-            response = {}
-            if cluster in MACHINES['clusters']:
-                response[cluster] = []
-                for hostname in MACHINES['clusters'][cluster]['hostnames']:
-                    who = getWho(hostname)
-                    response[cluster].append({
-                        'hostname': hostname,
-                        'alive': 'yes' if who != None else 'no',
-                        'response': who['response'] if who != None else {}
-                    })
-
-            self.wfile.write(dumps({'response': response}).encode())
-        elif None != re.search('/api/host/', self.path):
-            host = self.path[self.path.find('host') + 5:]
-            self.send_response(200)
-            self.send_header('Content-type','application/json')
-            self.end_headers()
-            response = getWho(host)
-            if response == None:
-                response = {'response': 'not alive'}
-
-            self.wfile.write(dumps({'response': response['response']}).encode())
-        else:
-            self.send_response(403)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-
-class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
-        """Handle requests in a separate thread."""
-
-for i in range(THREADS):
-    t = threading.Thread(target=slaveDriverThread, args=(i,), daemon=True)
-    client = paramiko.SSHClient()
-    client.load_system_host_keys()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    clients.append(client)
-    threads.append(t)
-    t.start()
-    time.sleep(1.5)
-try:
-    server = ThreadedHTTPServer(('', PORT), handler)
-    logging.info('STARTING ON %d' , PORT)
-    server.serve_forever()
-
-except KeyboardInterrupt:
-    logging.info('SHUTTING DOWN')
-    server.socket.close()
+#
+#for i in range(THREADS):
+#    t = threading.Thread(target=slaveDriverThread, args=(i,), daemon=True)
+#    client = paramiko.SSHClient()
+#    client.load_system_host_keys()
+#    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+#    clients.append(client)
+#    threads.append(t)
+#    t.start()
+#    time.sleep(1.5)
