@@ -57,7 +57,7 @@ mongodb = mongo.phrampu
 mongologs = mongodb.logs
 
 # clears db if needed
-# mongologs.drop()
+mongologs.drop()
 
 
 def lname():
