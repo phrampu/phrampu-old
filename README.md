@@ -5,6 +5,11 @@ To-do:
     - [ ] Fix all the other endpoints that are broken
     - [ ] Standardize api responses and document
     - [ ] Figure out how to get lab class schedules + display "HAAS 257 has a class going on right now!" or something
+    - [ ] Logging stats on people, so user x has spend y time in lab z, and rank people. We could make kickass charts for this as well
+    - [ ] Move everything to a non-shitty web framework: flask/django.
+    - [ ] Split out thread slave stuff into another file
+    - [ ] Split out helper functions into another file (util.py or helper.py)
   - Frontend:
     - [ ] Filtering by tty/pts
     - [ ] Display traffic graph/heatmap (d3)
+    - [ ] Rewrite using an actual framework (angular/react), look into react-native
