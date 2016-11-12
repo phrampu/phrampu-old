@@ -18,6 +18,7 @@ import filters
 import argparse
 import sys
 from flask import Flask, json, Response
+from flask_cors import CORS, cross_origin
 
 PORT = 57888
 LDBPATH = "/p/lname/lname.db"
@@ -150,11 +151,10 @@ def sshWorker(i, hostname):
           'cluster': cluster,
           'devices': who['devices'],
           'timestamp': who['timestamp'],
-          'name': who['lname']['name'],
-          'email': who['lname']['email'],
-          'careerAcc': who['lname']['careerAcc'],
+          'name': who['lname']['name'] if who['lname'] != 'None' else 'None',
+          'email': who['lname']['email'] if who['lname'] != 'None' else 'None',
+          'careerAcc': who['lname']['careerAcc'] if who['lname'] != 'None' else 'None',
         }).inserted_id
-    #pprint.pprint(whoCache)
 
 def slaveDriverThread(i):
     while True:
@@ -164,30 +164,35 @@ def slaveDriverThread(i):
             time.sleep(5)
     return
 
+def spawnThreads():
+    for i in range(THREADS):
+        t = threading.Thread(target=slaveDriverThread, args=(i,), daemon=True)
+        client = paramiko.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        clients.append(client)
+        threads.append(t)
+        t.start()
+        time.sleep(1.5)
+
+threading.Thread(target=spawnThreads, daemon=True).start()
+
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/api/master")
+@cross_origin()
 def api_master():
     js = json.dumps({'response': whoCache})
     resp = Response(js, status=200, mimetype='application/json')
     return resp
 
 @app.route("/api/cluster/<cluster_name>")
+@cross_origin()
 def api_cluster():
     js = json.dumps({'response': whoCache[cluster_name]})
     resp = Response(js, status=200, mimetype='application/json')
     return resp
 
 if __name__ == "__main__":
-    app.run(port=PORT)
-
-#
-#for i in range(THREADS):
-#    t = threading.Thread(target=slaveDriverThread, args=(i,), daemon=True)
-#    client = paramiko.SSHClient()
-#    client.load_system_host_keys()
-#    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-#    clients.append(client)
-#    threads.append(t)
-#    t.start()
-#    time.sleep(1.5)
+    app.run(host='0.0.0.0', port=PORT)
