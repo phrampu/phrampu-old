@@ -27,7 +27,7 @@ USERNAME = os.environ.get('PHRAMPU_USER')
 MACHINES = yaml.load(open('servers.yaml', 'r'))
 
 def configurelogging():
-    with open("filter.yaml", 'r') as the_file:
+    with open("filters.yaml", 'r') as the_file:
         config_dict = yaml.load(the_file)
 
     logging.config.dictConfig(config_dict)
