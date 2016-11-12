@@ -15,6 +15,9 @@ from http.server import BaseHTTPRequestHandler,HTTPServer
 from socketserver import ThreadingMixIn
 import time
 from pymongo import MongoClient
+import logging
+import logging.config
+import filters
 
 PORT = 57888
 LDBPATH = "/p/lname/lname.db"
@@ -22,6 +25,13 @@ THREADS = 4
 PASSWORD = os.environ.get('PHRAMPU_PASS')
 USERNAME = os.environ.get('PHRAMPU_USER')
 MACHINES = yaml.load(open('servers.yaml', 'r'))
+
+def configurelogging():
+    with open("filter.yaml", 'r') as the_file:
+        config_dict = yaml.load(the_file)
+
+    logging.config.dictConfig(config_dict)
+configurelogging()
 
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
@@ -62,7 +72,7 @@ def lname():
 lname()
 
 def sshAndGetWho(i, hostname):
-    print("sshing into ", hostname)
+    logging.info('sshing into %s', hostname)
     who = []
     try:
         clients[i].connect(hostname, username=USERNAME, password=PASSWORD, look_for_keys=False)
@@ -71,7 +81,7 @@ def sshAndGetWho(i, hostname):
             who.append(line[:-2])
         clients[i].close()
     except Exception as e:
-        print(e)
+        logging.error(e)
         pass
     return who
 
@@ -127,7 +137,7 @@ def sshWorker(i, hostname):
 def slaveDriverThread(i):
     while True:
         for hostname in hostnamesChunked[i]:
-            print('thread ', i, 'sshing to ', hostname)
+            logging.info('thread %s sshing to %s', i, hostname)
             sshWorker(i, hostname)
             time.sleep(5)
     return
@@ -159,7 +169,7 @@ class handler(BaseHTTPRequestHandler):
             for cluster in MACHINES['clusters']:
                 response[cluster] = []
                 for machine in MACHINES['clusters'][cluster]['hostnames']:
-                    print('getting ', machine)
+                    logging.info('getting %s', machine)
                     who = getWho(machine)
                     results=[element for element in who['response'] if element['careerAcc'] == user] if who is not None else []
                     if results:
@@ -187,7 +197,7 @@ class handler(BaseHTTPRequestHandler):
                         'alive': 'yes' if who != None else 'no',
                         'response': who['response'] if who != None else {}
                     })
-                
+
             self.wfile.write(dumps({'response': response}).encode())
         elif None != re.search('/api/host/', self.path):
             host = self.path[self.path.find('host') + 5:]
@@ -197,7 +207,7 @@ class handler(BaseHTTPRequestHandler):
             response = getWho(host)
             if response == None:
                 response = {'response': 'not alive'}
-            
+
             self.wfile.write(dumps({'response': response['response']}).encode())
         else:
             self.send_response(403)
@@ -218,9 +228,9 @@ for i in range(THREADS):
     time.sleep(1.5)
 try:
     server = ThreadedHTTPServer(('', PORT), handler)
-    print('STARTING ON ' , PORT)
+    logging.info('STARTING ON %d' , PORT)
     server.serve_forever()
 
 except KeyboardInterrupt:
-    print('SHUTTING DOWN')
+    logging.info('SHUTTING DOWN')
     server.socket.close()

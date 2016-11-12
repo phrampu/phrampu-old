@@ -1,0 +1,24 @@
+version: 1
+disable_existing_loggers: False
+
+formatters:
+  simple:
+      format: '%(asctime)s:%(levelname)-7s:%(message)s'
+      datefmt: '[%m/%d/%Y %H:%M:%S]'
+      level: logging.DEBUG
+
+handlers:
+    file:
+        class: logging.handlers.RotatingFileHandler
+        formatter: simple
+        filename: server.log
+        filters:
+            - myfilter
+root:
+    level: DEBUG
+    handlers:
+        - file
+
+filters:
+    myfilter:
+        (): filters.MyFilter
