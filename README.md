@@ -9,7 +9,7 @@ To-do:
     - [ ] Move everything to a non-shitty web framework: flask/django.
     - [ ] Split out thread slave stuff into another file
     - [ ] Split out helper functions into another file (util.py or helper.py)
-    - [ ] Make hostnames ordered within cluster within master/cluster api calls i.e. {escher: [{escher00}, {escher01}, ...] instead of random order
+    - [X] Make hostnames ordered within cluster within master/cluster api calls i.e. {escher: [{escher00}, {escher01}, ...] instead of random order
   - Frontend:
     - [ ] Filtering by tty/pts
     - [ ] Display traffic graph/heatmap (d3)
