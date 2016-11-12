@@ -1,7 +1,7 @@
 clusters:
   xinu:
     room: "HAAS 257"
-    camera: http://haas257-cam.cs.purdue.edu/axis-cgi/jpg/image.cgi
+    camera: http://haas257-cam.cs.purdue.edu/mjpg/video.mjpg
     calendar: tg56f4t31msvg4o56iuf37luqk
     hostnames:
       - xinu00.cs.purdue.edu
@@ -28,7 +28,7 @@ clusters:
       - xinu21.cs.purdue.edu
   borg:
     room: "HAAS G040"
-    camera: http://haasg040-cam.cs.purdue.edu/axis-cgi/jpg/image.cgi
+    camera: http://haasg040-cam.cs.purdue.edu/mjpg/video.mjpg
     calendar: jv11mjte5oupheck2kmv36mn2o
     hostnames:
       - borg00.cs.purdue.edu
@@ -58,7 +58,7 @@ clusters:
       - borg24.cs.purdue.edu
   moore:
     room: "LWSN B146"
-    camera: http://lwsnb146-cam.cs.purdue.edu/axis-cgi/jpg/image.cgi
+    camera: http://lwsnb146-cam.cs.purdue.edu/mjpg/video.mjpg
     calendar: 1r5tgrb2sln4oe4h4f4gfeece8
     hostnames:
       - moore00.cs.purdue.edu
@@ -88,7 +88,7 @@ clusters:
       - moore24.cs.purdue.edu
   pod:
     room: "LWSN B148"
-    camera: http://lwsnb148-cam.cs.purdue.edu/axis-cgi/jpg/image.cgi
+    camera: http://lwsnb148-cam.cs.purdue.edu/mjpg/video.mjpg
     calendar: hd9ldosmo9upm7u5scvq8uumig
     hostnames:
       - pod0-0.cs.purdue.edu
@@ -119,7 +119,7 @@ clusters:
       - pod5-5.cs.purdue.edu
   sslab:
     room: "LWSN B158"
-    camera: http://lwsnb158-cam.cs.purdue.edu/axis-cgi/jpg/image.cgi
+    camera: http://lwsnb158-cam.cs.purdue.edu/mjpg/video.mjpg
     calendar: 25m91hh3dpdlcguv5h30i749pg
     hostnames:
       - sslab00.cs.purdue.edu
@@ -149,7 +149,7 @@ clusters:
       - sslab24.cs.purdue.edu
   escher:
     room: "HAAS G056"
-    camera: http://haasg056-cam.cs.purdue.edu/axis-cgi/jpg/image.cgi
+    camera: http://haasg056-cam.cs.purdue.edu/mjpg/video.mjpg
     hostnames:
       - escher00.cs.purdue.edu
       - escher01.cs.purdue.edu
