@@ -16,3 +16,4 @@ To-do:
     - [ ] Rewrite using an actual framework (angular/react), look into react-native
   - Etc:
     - [ ] Make adjacency lists for every lab room, where each node is a hostname, and the edges are between adjacent lab machines
+    - [ ] Swagger docs
