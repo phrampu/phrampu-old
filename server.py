@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+from collections import OrderedDict
 import threading
 import paramiko, base64
 import re
@@ -71,7 +72,8 @@ for cluster in MACHINES['clusters']:
         hostnames.append(hostname)
         hostnameToCluster[hostname] = cluster
         if cluster not in whoCache:
-            whoCache[cluster] = {}
+            whoCache[cluster] = OrderedDict()
+
 hostnamesChunked = list(chunks(hostnames, len(hostnames)//THREADS))
 threads = []
 clients = []
