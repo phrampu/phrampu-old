@@ -8,3 +8,4 @@ simplejson==3.8.1
 zerorpc==0.6.0
 requests==2.11.1
 PyYAML==3.12
+pymongo==3.3.1
