@@ -131,7 +131,7 @@ def formatWho(who):
                 found = True
         if not found:
             whoList.append({
-                'lname': lnameDict[careerAcc],
+                'lname': lnameDict[careerAcc] if careerAcc in lnameDict else 'None',
                 'timestamp': datetime.datetime.now().isoformat(),
                 'devices': [device],
             })
