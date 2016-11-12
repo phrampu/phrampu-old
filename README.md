@@ -6,7 +6,7 @@ To-do:
     - [ ] Standardize api responses and document
     - [ ] Figure out how to get lab class schedules + display "HAAS 257 has a class going on right now!" or something
     - [ ] Logging stats on people, so user x has spend y time in lab z, and rank people. We could make kickass charts for this as well
-    - [ ] Move everything to a non-shitty web framework: flask/django.
+    - [x] Move everything to a non-shitty web framework: flask/django.
     - [ ] Split out thread slave stuff into another file
     - [ ] Split out helper functions into another file (util.py or helper.py)
     - [ ] Make hostnames ordered within cluster within master/cluster api calls i.e. {escher: [{escher00}, {escher01}, ...] instead of random order
@@ -16,3 +16,4 @@ To-do:
     - [ ] Rewrite using an actual framework (angular/react), look into react-native
   - Etc:
     - [ ] Make adjacency lists for every lab room, where each node is a hostname, and the edges are between adjacent lab machines
+    - [ ] Swagger docs
