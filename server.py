@@ -47,8 +47,7 @@ mongodb = mongo.phrampu
 mongologs = mongodb.logs
 
 # clears db if needed
-mongologs.drop()
-
+# mongologs.drop()
 
 def lname():
     with open(LDBPATH, 'r') as ldb:
@@ -133,26 +132,6 @@ def slaveDriverThread(i):
             time.sleep(5)
     return
 
-def getAlive(hostname):
-    req = None
-    try:
-        req = requests.get('http://' + hostname + ':' + str(PORT) + '/check')
-        if req:
-            return True
-    except:
-        pass
-    return False
-
-def getWho(hostname):
-    req = None
-    try:
-        req = requests.get('http://' + hostname + ':' + str(PORT) + '/who')
-        if req:
-            return req.json()
-    except:
-        pass
-    return None
-
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if None != re.search('/who', self.path):
@@ -192,12 +171,6 @@ class handler(BaseHTTPRequestHandler):
                     del response[cluster]
 
             self.wfile.write(dumps({'response': response}).encode())
-
-        elif None != re.search('/check', self.path):
-            self.send_response(200)
-            self.send_header('Content-type','application/json')
-            self.end_headers()
-            self.wfile.write(dumps({'alive': 'yes'}).encode())
 
         elif None != re.search('/api/cluster', self.path):
             cluster = self.path[self.path.find('cluster') + 8:]
@@ -251,5 +224,3 @@ try:
 except KeyboardInterrupt:
     print('SHUTTING DOWN')
     server.socket.close()
-
-
