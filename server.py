@@ -18,6 +18,8 @@ from pymongo import MongoClient
 import logging
 import logging.config
 import filters
+import argparse
+import sys
 
 PORT = 57888
 LDBPATH = "/p/lname/lname.db"
@@ -27,11 +29,33 @@ USERNAME = os.environ.get('PHRAMPU_USER')
 MACHINES = yaml.load(open('servers.yaml', 'r'))
 
 def configurelogging():
-    with open("filters.yaml", 'r') as the_file:
+    with open('filters.yaml', 'r') as the_file:
         config_dict = yaml.load(the_file)
 
     logging.config.dictConfig(config_dict)
 configurelogging()
+
+logger = logging.getLogger()
+
+def getargs():
+    parser = argparse.ArgumentParser(description='Initial settings for the server')
+    parser.add_argument('-d', '--debug', nargs='?', choices=['DEBUG','INFO','WARNING','ERROR','CRITICAL'],
+            help='the default debug level for logging')
+    parser.add_argument('-v', '--verbose', help='Also output logging information to the console', action='store_true')
+
+    args = parser.parse_args()
+
+    if args.verbose:
+        ch = logging.StreamHandler(sys.stdout)
+        formatter = logging.Formatter('%(asctime)s:%(levelname)-7s:%(message)s', '[%m/%d/%Y %H:%M:%S]')
+        ch.setFormatter(formatter)
+        ch.addFilter(filters.MyFilter())
+        logger.addHandler(ch)
+
+    if args.debug is not None:
+        logger.setLevel(args.debug)
+
+getargs()
 
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
