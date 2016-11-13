@@ -81,3 +81,12 @@ def spawnThreads():
         threads.append(t)
         t.start()
         time.sleep(1.5)
+
+def lastFound(careerAcc):
+    cursor = mongologs.find({'careerAcc': careerAcc}).sort([('timestamp', -1)])
+    result = ''
+    for logData in cursor:
+        if 'tty7' in logData['devices']:
+            result = logData['hostname']
+            break
+    return result

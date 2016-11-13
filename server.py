@@ -36,9 +36,16 @@ def api_counts():
     resp = Response(js, status=200, mimetype='application/json')
     return resp
 
+@app.route("/api/lastfound/<career_acc>")
+@cross_origin()
+def api_lastfound(career_acc):
+    js = json.dumps({'response': c.lastFound(career_acc)})
+    resp = Response(js, status=200, mimetype='application/json')
+    return resp
+
 @app.route("/api/cluster/<cluster_name>")
 @cross_origin()
-def api_cluster():
+def api_cluster(cluster_name):
     js = json.dumps({'response': c.whoCache[cluster_name]})
     resp = Response(js, status=200, mimetype='application/json')
     return resp
