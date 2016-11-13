@@ -82,6 +82,19 @@ def spawnThreads():
         t.start()
         time.sleep(1.5)
 
+def formatTime(isotime):
+    from_zone = tz.tzutc()
+    to_zone = tz.tzlocal()
+    utc = dateutil.parser.parse(isotime)
+    utc = utc.replace(tzinfo=from_zone)
+    est = utc.astimezone(to_zone)
+    t1 = est.replace(tzinfo=None) + timedelta(minutes=4)
+    t2 = datetime.now().replace(tzinfo=None)
+    if t1 > t2:
+        return 'Current'
+    else:
+        return est.strftime('%Y-%m-%d %H:%M')
+
 def lastFound(careerAcc):
     cursor = mongologs.find({'careerAcc': careerAcc}).sort([('timestamp', -1)])
     result = {}
