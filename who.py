@@ -45,3 +45,21 @@ def formatWho(who, lnameDict):
             })
 
     return whoList
+
+def freeLabCount(whoData):
+    ret = {}
+    for cluster, hosts in whoData.items():
+        for host, hostData in hosts.items():
+            for person in hostData:
+                for device in person['devices']:
+                    if device.startswith('tty'):
+                        if cluster in ret:
+                            ret[cluster]['taken'] += 1
+                            ret[cluster]['free'] -= 1
+                        else:
+                            ret[cluster] = {
+                                'taken': 1,
+                                'free': len(hosts) - 1,
+                                'total': len(hosts)
+                            }
+    return ret

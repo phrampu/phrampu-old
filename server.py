@@ -9,6 +9,7 @@ from flask_cors import CORS, cross_origin
 
 import settings as s
 import crawler as c
+import who
 
 logger = s.logging.getLogger()
 s.getargs(logger)
@@ -25,6 +26,13 @@ CORS(app)
 @cross_origin()
 def api_master():
     js = json.dumps({'response': c.whoCache})
+    resp = Response(js, status=200, mimetype='application/json')
+    return resp
+
+@app.route("/api/counts")
+@cross_origin()
+def api_counts():
+    js = json.dumps({'response': who.freeLabCount(c.whoCache)})
     resp = Response(js, status=200, mimetype='application/json')
     return resp
 
