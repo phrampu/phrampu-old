@@ -84,9 +84,10 @@ def spawnThreads():
 
 def lastFound(careerAcc):
     cursor = mongologs.find({'careerAcc': careerAcc}).sort([('timestamp', -1)])
-    result = ''
+    result = {}
     for logData in cursor:
         if 'tty7' in logData['devices']:
-            result = logData['hostname']
+            result['hostname'] = logData['hostname']
+            result['timestamp'] = logData['timestamp']
             break
     return result
