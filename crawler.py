@@ -8,6 +8,7 @@ from who import runWhoLocally, formatWho, lname
 from pymongo import MongoClient
 from datetime import datetime, timedelta
 from dateutil import tz
+import dateutil.parser
 
 lnameDict = lname(s.LDBPATH)
 connections = {}
@@ -85,11 +86,7 @@ def spawnThreads():
         time.sleep(1.5)
 
 def formatTime(isotime):
-    from_zone = tz.tzutc()
-    to_zone = tz.tzlocal()
-    utc = dateutil.parser.parse(isotime)
-    utc = utc.replace(tzinfo=from_zone)
-    est = utc.astimezone(to_zone)
+    est = dateutil.parser.parse(isotime)
     t1 = est.replace(tzinfo=None) + timedelta(minutes=4)
     t2 = datetime.now().replace(tzinfo=None)
     if t1 > t2:

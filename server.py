@@ -15,7 +15,7 @@ logger = s.logging.getLogger()
 s.getargs(logger)
 
 # clears db if needed
-# mongologs.drop()
+# c.mongologs.drop()
 
 threading.Thread(target=c.spawnThreads, daemon=True).start()
 
