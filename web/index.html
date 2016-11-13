@@ -17,7 +17,7 @@
           <p>
             <ul>
               <li v-for="(count, cluster) in clusters">
-               {{ yaml['clusters'][cluster]['room'] }} - {{ cluster }} - {{ count }} / {{ maxes[cluster] }}
+               <a v-bind:href="yaml['clusters'][cluster]['camera']">{{ yaml['clusters'][cluster]['room'] }}</a> - {{ cluster }} - {{ count }} / {{ maxes[cluster] }}
               </li>
             </ul>
             </p>
@@ -51,19 +51,19 @@
               <li v-for="(a, cluster) in response">
                 {{ cluster }} - {{ yaml['clusters'][cluster]['room'] }}
                 <ul>
-                <li v-for="(b, host) in response[cluster]">
-                  {{ host }}  -  [
-                    <span v-for="x in b">
-                      <template v-if="x['devices'].indexOf('tty7') >= 0">
-                         <strong>{{ x['lname']['careerAcc'] }}</strong>
-                      </template>
-                      <template v-else>
-                        {{ x['lname']['careerAcc'] }}
-                      </template>
-                  </span>
-                ]
-              </li>
-            </ul>
+                    <li v-for="(b, host) in response[cluster]" v-if="b.length > 0 && b[0]['lname'] != 'None'">
+                      {{ host }}  - [ 
+                        <span v-for="x in b">
+                          <template v-if="x['devices'].indexOf('tty7') >= 0">
+                             <strong>{{ x['lname']['careerAcc'] }}</strong>
+                          </template>
+                          <template v-else>
+                            {{ x['lname']['careerAcc'] }}
+                          </template>
+                      </span>
+                    ]
+                  </li>
+                </ul>
             </li>
           </ul>
           </p>
@@ -73,7 +73,7 @@
   </div>
   <script src="https://unpkg.com/vue/dist/vue.js"></script>
   <script>
-    var url = "http://austinschwartz.com:57888/api/master";
+    var url = "http://sslab00.cs.purdue.edu:57888/api/master";
     var app = new Vue({
       el: '#app',
 
@@ -149,5 +149,6 @@
       }
     });
   </script>
+  <footer style="text-align:center"><a href="https://github.com/nawns/phrampu">https://github.com/nawns/phrampu</a></footer>
 </body>
 </html>
