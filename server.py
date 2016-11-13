@@ -2,172 +2,90 @@
 from collections import OrderedDict
 import threading
 import paramiko, base64
-import re
-import subprocess
-import csv
-import os
-import yaml
-import datetime
-from json import dumps, loads, JSONEncoder, JSONDecoder
-from http.server import BaseHTTPRequestHandler,HTTPServer
-from socketserver import ThreadingMixIn
-import time
-from pymongo import MongoClient
-import logging
-import logging.config
-import filters
-import argparse
 import sys
+import time
+import util
+from json import dumps, loads, JSONEncoder, JSONDecoder
+from pymongo import MongoClient
+
 from flask import Flask, json, Response
 from flask_cors import CORS, cross_origin
 
-PORT = 57888
-LDBPATH = "/p/lname/lname.db"
-THREADS = 4
-PASSWORD = os.environ.get('PHRAMPU_PASS')
-USERNAME = os.environ.get('PHRAMPU_USER')
-MACHINES = yaml.load(open('servers.yaml', 'r'))
+from who import lname, runWhoLocally, formatWho
+import settings as s
 
-def configurelogging():
-    with open('filters.yaml', 'r') as the_file:
-        config_dict = yaml.load(the_file)
+logger = s.logging.getLogger()
+s.getargs(logger)
 
-    logging.config.dictConfig(config_dict)
-configurelogging()
-
-logger = logging.getLogger()
-
-def getargs():
-    parser = argparse.ArgumentParser(description='Initial settings for the server')
-    parser.add_argument('-d', '--debug', nargs='?', choices=['DEBUG','INFO','WARNING','ERROR','CRITICAL'],
-            help='the default debug level for logging')
-    parser.add_argument('-v', '--verbose', help='Also output logging information to the console', action='store_true')
-
-    args = parser.parse_args()
-
-    if args.verbose:
-        ch = logging.StreamHandler(sys.stdout)
-        formatter = logging.Formatter('%(asctime)s:%(levelname)-7s:%(message)s', '[%m/%d/%Y %H:%M:%S]')
-        ch.setFormatter(formatter)
-        ch.addFilter(filters.MyFilter())
-        logger.addHandler(ch)
-
-    if args.debug is not None:
-        logger.setLevel(args.debug)
-
-getargs()
-
-def chunks(l, n):
-    """Yield successive n-sized chunks from l."""
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
-
-lnameDict = {}
+lnameDict = lname(s.LDBPATH)
 connections = {}
 whoCache = {}
 hostnames = []
 hostnameToCluster = {}
-for cluster in MACHINES['clusters']:
-    for hostname in MACHINES['clusters'][cluster]['hostnames']:
+for cluster in s.MACHINES['clusters']:
+    for hostname in s.MACHINES['clusters'][cluster]['hostnames']:
         hostnames.append(hostname)
         hostnameToCluster[hostname] = cluster
         if cluster not in whoCache:
             whoCache[cluster] = OrderedDict()
 
-hostnamesChunked = list(chunks(hostnames, len(hostnames)//THREADS))
+hostnamesChunked = list(util.chunks(hostnames, len(hostnames)//s.THREADS))
 threads = []
 clients = []
-mongo = MongoClient('mongodb://austinschwartz.com:27017/')
+mongo = MongoClient(s.MONGODB)
 mongodb = mongo.phrampu
 mongologs = mongodb.logs
 
 # clears db if needed
 # mongologs.drop()
 
-def lname():
-    with open(LDBPATH, 'r') as ldb:
-        ldbreader = csv.reader(ldb, delimiter=':', quotechar='|')
-        for row in ldbreader:
-            firstComma = row[1].find(',')
-            lnameDict[row[0]] = {
-                "careerAcc": row[0],
-                "name": row[1][:firstComma],
-                "email": row[2],
-            }
-lname()
-
 def sshAndGetWho(i, hostname):
-    logging.info('sshing into %s', hostname)
+    s.log('sshing into %s', hostname)
     who = []
     try:
-        clients[i].connect(hostname, username=USERNAME, password=PASSWORD, look_for_keys=False)
+        clients[i].connect(
+            hostname, 
+            username=s.USERNAME, 
+            password=s.PASSWORD, 
+            look_for_keys=False
+        )
         stdin, stdout, stderr = clients[i].exec_command('who')
         for line in stdout:
             who.append(line[:-2])
         clients[i].close()
     except Exception as e:
-        logging.error(e)
+        s.logerror(e)
         pass
     return who
 
-def runWhoLocally():
-    # Run + split who on new lines
-    return subprocess.check_output("who").decode().split('\n')
-
-def formatWho(who):
-    who = list(filter(None, who))
-
-    # First col (username)
-    whoCol1 = [line.split()[0] for line in who]
-
-    # Second col (tty/pts)
-    whoCol2 = [line.split()[1] for line in who]
-
-    whoZip = list(zip(whoCol1, whoCol2))
-
-    whoList = []
-    for (careerAcc, device) in whoZip:
-        found = False
-        for data in whoList:
-            if data['lname']['careerAcc'] == careerAcc:
-                data['devices'].append(device)
-                found = True
-        if not found:
-            whoList.append({
-                'lname': lnameDict[careerAcc] if careerAcc in lnameDict else 'None',
-                'timestamp': datetime.datetime.now().isoformat(),
-                'devices': [device],
-            })
-
-    return whoList
 
 
 def sshWorker(i, hostname):
     global whoCache
     cluster = hostnameToCluster[hostname]
-    whoFormatted = formatWho(sshAndGetWho(i, hostname))
+    whoFormatted = formatWho(sshAndGetWho(i, hostname), lnameDict)
     whoCache[cluster][hostname] = whoFormatted
-    for who in whoFormatted:
-        mongologs.insert_one({
-          'hostname': hostname,
-          'cluster': cluster,
-          'devices': who['devices'],
-          'timestamp': who['timestamp'],
-          'name': who['lname']['name'] if who['lname'] != 'None' else 'None',
-          'email': who['lname']['email'] if who['lname'] != 'None' else 'None',
-          'careerAcc': who['lname']['careerAcc'] if who['lname'] != 'None' else 'None',
-        }).inserted_id
+    #for who in whoFormatted:
+        # mongologs.insert_one({
+        #   'hostname': hostname,
+        #   'cluster': cluster,
+        #   'devices': who['devices'],
+        #   'timestamp': who['timestamp'],
+        #   'name': who['lname']['name'] if who['lname'] != 'None' else 'None',
+        #   'email': who['lname']['email'] if who['lname'] != 'None' else 'None',
+        #   'careerAcc': who['lname']['careerAcc'] if who['lname'] != 'None' else 'None',
+        # }).inserted_id
 
 def slaveDriverThread(i):
     while True:
         for hostname in hostnamesChunked[i]:
-            logging.info('thread %s sshing to %s', i, hostname)
+            s.log('thread %s sshing to %s', i, hostname)
             sshWorker(i, hostname)
             time.sleep(5)
     return
 
 def spawnThreads():
-    for i in range(THREADS):
+    for i in range(s.THREADS):
         t = threading.Thread(target=slaveDriverThread, args=(i,), daemon=True)
         client = paramiko.SSHClient()
         client.load_system_host_keys()
@@ -197,4 +115,4 @@ def api_cluster():
     return resp
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=PORT)
+    app.run(host='0.0.0.0', port=s.PORT)
