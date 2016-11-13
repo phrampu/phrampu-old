@@ -13,6 +13,7 @@ PASSWORD = os.environ.get('PHRAMPU_PASS')
 USERNAME = os.environ.get('PHRAMPU_USER')
 MACHINES = yaml.load(open('servers.yaml', 'r'))
 MONGODB = 'mongodb://austinschwartz.com:27017/'
+LOG_TO_MONGO = False
 
 def configurelogging():
     with open('filters.yaml', 'r') as the_file:
