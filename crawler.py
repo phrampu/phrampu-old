@@ -101,6 +101,6 @@ def lastFound(careerAcc):
     for logData in cursor:
         if 'tty7' in logData['devices']:
             result['hostname'] = logData['hostname']
-            result['timestamp'] = logData['timestamp']
+            result['timestamp'] = formatTime(logData['timestamp'])
             break
     return result
