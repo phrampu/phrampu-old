@@ -7,8 +7,8 @@ To-do:
     - [ ] Figure out how to get lab class schedules + display "HAAS 257 has a class going on right now!" or something
     - [ ] Logging stats on people, so user x has spend y time in lab z, and rank people. We could make kickass charts for this as well
     - [x] Move everything to a non-shitty web framework: flask/django.
-    - [ ] Split out thread slave stuff into another file
-    - [ ] Split out helper functions into another file (util.py or helper.py)
+    - [x] Split out thread slave stuff into another file
+    - [x] Split out helper functions into another file (util.py or helper.py)
     - [X] Make hostnames ordered within cluster within master/cluster api calls i.e. {escher: [{escher00}, {escher01}, ...] instead of random order
   - Frontend:
     - [ ] Filtering by tty/pts
