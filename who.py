@@ -49,6 +49,12 @@ def formatWho(who, lnameDict):
 def freeLabCount(whoData):
     ret = {}
     for cluster, hosts in whoData.items():
+        if cluster not in ret:
+            ret[cluster] = {
+                'taken': 0,
+                'free': len(hosts),
+                'total': len(hosts)
+            }
         for host, hostData in hosts.items():
             for person in hostData:
                 for device in person['devices']:

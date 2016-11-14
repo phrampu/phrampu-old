@@ -16,11 +16,11 @@ whoCache = {}
 hostnames = []
 hostnameToCluster = {}
 for cluster in s.MACHINES['clusters']:
+    if cluster not in whoCache:
+        whoCache[cluster] = OrderedDict()
     for hostname in s.MACHINES['clusters'][cluster]['hostnames']:
         hostnames.append(hostname)
         hostnameToCluster[hostname] = cluster
-        if cluster not in whoCache:
-            whoCache[cluster] = OrderedDict()
 
 hostnamesChunked = list(util.chunks(hostnames, len(hostnames)//s.THREADS))
 threads = []
