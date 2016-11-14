@@ -9,6 +9,7 @@ To-do:
       - [ ] Add idle time based on 'w' script
       - [ ] Add additional logging, outside of log table. Could Log stats per lab machine per cluster. So we could query and get usage for the past 24 hours or something. Same thing for users
       - [ ] Endpoint for dumping data based on query
+      - [ ] Endpoint + front end for lname search (career acc => name, name => career acc)
     - [ ] Figure out how to get lab class schedules + display "HAAS 257 has a class going on right now!" or something
     - [ ] SQLAlchemy ORM + add models for users, etc
     - [x] Move everything to a non-shitty web framework: flask/django.

@@ -54,12 +54,14 @@
                     <li v-for="(b, host) in response[cluster]" v-if="b.length > 0 && b[0]['lname'] != 'None'">
                       {{ host }}  - [ 
                         <span v-for="x in b">
+                          <span v-bind:title=" x['lname']['careerAcc'] ">
                           <template v-if="x['devices'].indexOf('tty7') >= 0">
-                             <strong>{{ x['lname']['careerAcc'] }}</strong>
+                             <strong>"{{ x['lname']['name'] }}"</strong>
                           </template>
                           <template v-else>
-                            {{ x['lname']['careerAcc'] }}
+                            "{{ x['lname']['name'] }}"
                           </template>
+                          </span>
                       </span>
                     ]
                   </li>
@@ -68,12 +70,16 @@
           </ul>
           </p>
         </div>
+        <h3>Debug:</h3>
+        <div>
+         {{ response }}
+        </div>
       </div>
     </div>
   </div>
   <script src="https://unpkg.com/vue/dist/vue.js"></script>
   <script>
-    var url = "http://borg06.cs.purdue.edu:57888/api/master";
+    var url = "http://austinschwartz.com:57888/api/master";
     var app = new Vue({
       el: '#app',
 
@@ -149,6 +155,9 @@
       }
     });
   </script>
-  <footer style="text-align:center"><a href="https://github.com/nawns/phrampu">https://github.com/nawns/phrampu</a></footer>
+  <footer style="text-align:center">
+      <a href="https://github.com/nawns/phrampu">https://github.com/nawns/phrampu</a></br>
+      <a href="/api.html">undocumented api calls</a>
+        </footer>
 </body>
 </html>
