@@ -20,20 +20,13 @@
         margin: 30px 15px 15px;
       }
     </style>
-    <script>
-      var clusters = {
-        'moore': "LWSN B146",
-        'pod': "LWSN B148",
-        'sslab': "LWSN B158",
-        'escher': "HAAS G056",
-        'xinu': "HAAS 257",
-        'borg': "HAAS G040",
-      }
-    </script>
   </head>
   <body>
     <header class="bar bar-nav">
-      <!--<a class="icon icon-gear pull-right" href="#settingsModal"></a> -->
+      <button class="btn btn-link btn-nav pull-left">
+        <span class="icon icon-left-nav"></span>
+        <a href="/" data-ignore="push">Home</a>
+      </button>
       <h1 class="title">phrampu</h1>
     </header>
 
@@ -59,18 +52,10 @@
       <div class="card">
         <span id="item1mobile" class="control-content active">
           <ul class="table-view">
-            <li class="table-view-cell"><a href="/cluster.html?lab=moore" data-ignore="push" ><strong>LWSN B146</a></strong></li>
-            <li class="table-view-cell">{{ counts['moore']['free'] }} / {{ counts['moore']['total'] }} free </li>
-            <li class="table-view-cell"><a href="/cluster.html?lab=pod" data-ignore="push" ><strong>LWSN B148</a></strong></li>
-            <li class="table-view-cell">{{ counts['pod']['free'] }} / {{ counts['pod']['total'] }} free </li>
-            <li class="table-view-cell"><a href="/cluster.html?lab=sslab" data-ignore="push" ><strong>LWSN B158</a></strong></li>
-            <li class="table-view-cell">{{ counts['sslab']['free'] }} / {{ counts['sslab']['total'] }} free </li>
-            <li class="table-view-cell"><a href="/cluster.html?lab=escher" data-ignore="push" ><strong>HAAS G056</a></strong></li>
-            <li class="table-view-cell">{{ counts['escher']['free'] }} / {{ counts['escher']['total'] }} free </li>
-            <li class="table-view-cell"><a href="/cluster.html?lab=borg" data-ignore="push" ><strong>HAAS G040</a></strong></li>
-            <li class="table-view-cell">{{ counts['borg']['free'] }} / {{ counts['borg']['total'] }} free </li>
-            <li class="table-view-cell"><a href="/cluster.html?lab=xinu" data-ignore="push" ><strong>HAAS 257</a></strong></li>
-            <li class="table-view-cell">{{ counts['xinu']['free'] }} / {{ counts['xinu']['total'] }} free </li>
+            <li class="table-view-cell"><strong>{{ clusters[cluster] }} - {{ cluster }}</strong></li>
+            <li v-for="x in people" class="table-view-cell">
+              {{ x }}
+            </li>
           </ul>
         </span>
         <span id="item2mobile" class="control-content">sry</span>
@@ -92,10 +77,20 @@
       data: {
         counts: {},
         master: {},
-        people: {},
+        people: [],
+        clusters: {
+          'moore': "LWSN B146",
+          'pod': "LWSN B148",
+          'sslab': "LWSN B158",
+          'escher': "HAAS G056",
+          'xinu': "HAAS 257",
+          'borg': "HAAS G040",
+        },
+        cluster: '',
       },
 
       created: function() {
+        this.cluster = this.getUrlParameter('lab');
         this.fetchData();
       },
 
@@ -105,9 +100,31 @@
           $.getJSON( url + 'counts', function( data ) {
             self.counts = data['response'];
           });
-          $.getJSON( url + 'master', function( data ) {
+          $.getJSON( url + 'cluster/' + this.cluster, function( data ) {
             self.master = data['response'];
+            for (var host in self.master) {
+              for (var person in self.master[host]) {
+                if (self.master[host][person]['devices'].indexOf('tty7') >= 0) {
+                  self.people.push(self.master[host][person]['lname']['name']);
+                }
+              }
+            }
           });
+        },
+
+        getUrlParameter: function(sParam) {
+          var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+              sURLVariables = sPageURL.split('&'),
+              sParameterName,
+              i;
+
+          for (i = 0; i < sURLVariables.length; i++) {
+              sParameterName = sURLVariables[i].split('=');
+
+              if (sParameterName[0] === sParam) {
+                  return sParameterName[1] === undefined ? true : sParameterName[1];
+              }
+          }
         }
       }
     });
