@@ -1,95 +1,97 @@
 <html>
-<head>
-  <title>hi</title>
-  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.6.1/js-yaml.js"></script>
+  <head>
+    <title>hi</title>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ratchet/2.0.2/css/ratchet.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ratchet/2.0.2/js/ratchet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css'/>
-</head>
-<body>
-  <div class="container">
-    <div class="starter-template">
-      <div id="app" class="accordion">
-          <h3>Used lab machines:</h3>
-          <div>
-          <p>
-            <ul>
-              <li v-for="(count, cluster) in clusters">
-               <a v-bind:href="yaml['clusters'][cluster]['camera']">{{ yaml['clusters'][cluster]['room'] }}</a> - {{ cluster }} - {{ count }} / {{ maxes[cluster] }}
-              </li>
-            </ul>
-            </p>
-          </div>
-          <h3>Logged into Lawson machines:</h3>
-          <div>
-          <p>
-            <ul>
-              <li v-for="(data, user) in users">
-                {{ lnameMap[user]['name'] }} - {{ user }} [
-                  <span v-for="x in data"> 
-                    <template v-if="x['devices'].indexOf('tty7') >= 0">
-                     <strong>{{ x['hostname'] }}</strong>
-                    </template>
-                    <template v-else>
-                      {{ x['hostname'] }}
-                    </template>
-                  </span>
-                ]
-              </li>
-            </ul>
+    <style>
+      .slider {
+        margin-bottom: 0;
+      }
+      .slider img {
+        width: auto;
+        height: 150px;
+      }
+      .content-padded {
+        margin: 30px 15px 15px;
+      }
+    </style>
+    <script>
+      var clusters = {
+        'moore': "LWSN B146",
+        'pod': "LWSN B148",
+        'sslab': "LWSN B158",
+        'escher': "HAAS G056",
+        'xinu': "HAAS 257",
+        'borg': "HAAS G040",
+      }
+    </script>
+  </head>
+  <body>
+    <header class="bar bar-nav">
+      <!--<a class="icon icon-gear pull-right" href="#settingsModal"></a> -->
+      <h1 class="title">phrampu</h1>
+    </header>
 
-              </li>
-            </ul>
-            </p>
-          </div>
-          <h3>Clusters:</h3>
-          <div>
-          <p>
-            <ul>
-              <li v-for="(a, cluster) in response">
-                {{ cluster }} - {{ yaml['clusters'][cluster]['room'] }}
-                <ul>
-                    <li v-for="(b, host) in response[cluster]" v-if="b.length > 0 && b[0]['lname'] != 'None'">
-                      {{ host }}  - [ 
-                        <span v-for="x in b">
-                          <span v-bind:title=" x['lname']['careerAcc'] ">
-                          <template v-if="x['devices'].indexOf('tty7') >= 0">
-                             <strong>"{{ x['lname']['name'] }}"</strong>
-                          </template>
-                          <template v-else>
-                            "{{ x['lname']['name'] }}"
-                          </template>
-                          </span>
-                      </span>
-                    ]
-                  </li>
-                </ul>
-            </li>
+    <div class="bar bar-standard bar-header-secondary">
+      <form>
+        <input type="search" placeholder="Search">
+      </form>
+    </div>
+
+
+    <div class="content">
+      <div class="segmented-control">
+        <a class="control-item active" href="#item1mobile">
+          Lab Rooms
+        </a>
+        <a class="control-item" href="#item2mobile">
+          Search
+        </a>
+        <a class="control-item" href="#item3mobile">
+          Etc
+        </a>
+      </div>
+      <div class="card">
+        <span id="item1mobile" class="control-content active">
+          <ul class="table-view">
+            <li class="table-view-cell"><strong>LWSN B146</strong></li>
+            <li class="table-view-cell">{{ counts['moore']['free'] }} / {{ counts['moore']['total'] }} free </li>
+            <li class="table-view-cell"><strong>LWSN B148</strong></li>
+            <li class="table-view-cell">{{ counts['pod']['free'] }} / {{ counts['pod']['total'] }} free </li>
+            <li class="table-view-cell"><strong>LWSN B158</strong></li>
+            <li class="table-view-cell">{{ counts['sslab']['free'] }} / {{ counts['sslab']['total'] }} free </li>
+            <li class="table-view-cell"><strong>HAAS G056</strong></li>
+            <li class="table-view-cell">{{ counts['escher']['free'] }} / {{ counts['escher']['total'] }} free </li>
+            <li class="table-view-cell"><strong>HAAS G040</strong></li>
+            <li class="table-view-cell">{{ counts['borg']['free'] }} / {{ counts['borg']['total'] }} free </li>
+            <li class="table-view-cell"><strong>HAAS 257</strong></li>
+            <li class="table-view-cell">{{ counts['xinu']['free'] }} / {{ counts['xinu']['total'] }} free </li>
           </ul>
-          </p>
-        </div>
-        <h3>Debug:</h3>
-        <div>
-         {{ response }}
-        </div>
+        </span>
+        <span id="item2mobile" class="control-content">sry</span>
+        <span id="item3mobile" class="control-content">sry</span>
+      </div>
+
+
+      <div class="bar bar-standard bar-footer">
+        <a class="icon icon-compose pull-left"></a>
+        <a class="icon icon-gear pull-right"></a>
       </div>
     </div>
-  </div>
-  <script src="https://unpkg.com/vue/dist/vue.js"></script>
-  <script>
-    var url = "http://austinschwartz.com:57888/api/master";
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script>
+    var url = "http://austinschwartz.com:57888/api/";
     var app = new Vue({
-      el: '#app',
+      el: '.content',
 
       data: {
-        response: null,
-        users: null,
-        clusters: {},
-        maxes: null,
-        yaml: null,        
-        lnameMap: {},
+        counts: {},
+        master: {},
       },
 
       created: function() {
@@ -99,65 +101,15 @@
       methods: {
         fetchData: function () {
           var self = this;
-          $.getJSON( url, function( data ) {
-            self.response = data['response'];
-            map = {};
-            for (var cluster in data['response']) {
-              for (var host in data['response'][cluster]) {
-                var hostData = data['response'][cluster][host];
-                for (var user in hostData) {
-                  var e = {
-                      'hostname': host,
-                      'devices': hostData[user]['devices'],
-                  };
-                  var lname = hostData[user]['lname'];
-                  if (lname['careerAcc'] in map)
-                    map[lname['careerAcc']].push(e);
-                  else
-                    map[lname['careerAcc']] = [e];
-                  self.lnameMap[lname['careerAcc']] = lname;
-                }
-              }
-            }
-
-            self.users = map;
-            var x = self.response;
-            self.clusters = {}
-            self.maxes = {}
-            for (var host in x) {
-                if (host == 'data' || host == 'lore') continue;
-                self.clusters[host] = 0;
-                self.maxes[host] = Object.keys(x[host]).length;
-                for (var hostname in x[host]) {
-                    for (var user in x[host][hostname]) {
-                        var list = x[host][hostname][user];
-                        for (var device in list['devices']) {
-                            if (list['devices'][device].startsWith('tty')) {
-                                self.clusters[host] += 1;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
+          $.getJSON( url + 'counts', function( data ) {
+            self.counts = data['response'];
           });
-
-          $.get('../servers.yaml', function(data) {
-            var doc = jsyaml.load(data);
-            self.yaml = doc;
+          $.getJSON( url + 'master', function( data ) {
+            self.master = data['response'];
           });
-                $( function() {
-                    $( ".accordion" ).accordion({
-                        heightStyle: "content"
-                    });
-              } );
         }
       }
     });
   </script>
-  <footer style="text-align:center">
-      <a href="https://github.com/nawns/phrampu">https://github.com/nawns/phrampu</a></br>
-      <a href="/api.html">undocumented api calls</a>
-        </footer>
-</body>
+  </body>
 </html>
