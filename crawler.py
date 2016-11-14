@@ -4,6 +4,7 @@ from collections import OrderedDict
 import threading
 import util
 import time
+import re
 from who import runWhoLocally, formatWho, lname
 from pymongo import MongoClient
 from datetime import datetime, timedelta
@@ -99,7 +100,32 @@ def lastFound(careerAcc):
     result = {}
     for logData in cursor:
         if 'tty7' in logData['devices']:
+            result['careerAcc'] = careerAcc
             result['hostname'] = logData['hostname']
-            result['timestamp'] = formatTime(logData['timestamp'])
+            result['cluster'] = logData['cluster']
+            result['name'] = logData['name']
+            result['timestamp'] = logData['timestamp']
+            result['timeFormatted'] = formatTime(logData['timestamp'])
             break
     return result
+
+def anyMatch(pattern, name):
+    for n in name.split(' '):
+        if pattern.match(n):
+            return True
+    return False
+
+def find(regex):
+    if len(regex) < 5:
+        return {}
+    pattern = re.compile(regex[1:-1].lower())
+    users = set()
+    ret = []
+    for thing in lnameDict:
+        if pattern.match(thing.lower()) or pattern.match(lnameDict[thing]['name'].lower()) or anyMatch(pattern, lnameDict[thing]['name'].lower()):
+            users.add(thing)
+    for user in users:
+        f = lastFound(user)
+        if f != {}:
+            ret.append(f)
+    return ret

@@ -6,6 +6,7 @@ from json import dumps, loads, JSONEncoder, JSONDecoder
 
 from flask import Flask, json, Response
 from flask_cors import CORS, cross_origin
+from flask import request
 
 import settings as s
 import crawler as c
@@ -36,10 +37,11 @@ def api_counts():
     resp = Response(js, status=200, mimetype='application/json')
     return resp
 
-@app.route("/api/lastfound/<career_acc>")
+@app.route("/api/find")
 @cross_origin()
-def api_lastfound(career_acc):
-    js = json.dumps({'response': c.lastFound(career_acc)})
+def api_lastfound():
+    regex = request.args.get('regex', '')
+    js = json.dumps({'response': c.find(regex)})
     resp = Response(js, status=200, mimetype='application/json')
     return resp
 
