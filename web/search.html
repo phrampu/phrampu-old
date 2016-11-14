@@ -1,0 +1,123 @@
+<html>
+  <head>
+    <title>hi</title>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ratchet/2.0.2/css/ratchet.min.css">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ratchet/2.0.2/js/ratchet.js"></script>
+    <style>
+      .slider {
+        margin-bottom: 0;
+      }
+      .slider img {
+        width: auto;
+        height: 150px;
+      }
+      .content-padded {
+        margin: 30px 15px 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="bar bar-nav">
+      <button class="btn btn-link btn-nav pull-left">
+        <span class="icon icon-left-nav"></span>
+        <a href="/" data-ignore="push">Home</a>
+      </button>
+      <h1 class="title">phrampu</h1>
+    </header>
+
+    <div class="bar bar-standard bar-header-secondary">
+      <form action="search.html" method="get">
+        <input type="search" placeholder="Search" name="find">
+      </form>
+    </div>
+
+
+
+    <div class="content">
+      <div class="segmented-control">
+        <a class="control-item active" href="#item1mobile">
+          Lab Rooms
+        </a>
+        <a class="control-item" href="#item2mobile">
+          Search
+        </a>
+        <a class="control-item" href="#item3mobile">
+          Etc
+        </a>
+      </div>
+      <div class="card">
+        <span id="item1mobile" class="control-content active">
+          <ul class="table-view">
+            <li v-for="x in people" class="table-view-cell">
+              {{ x['careerAcc'] }} - {{ x['name'] }} - {{ clusters[x['cluster']] }} - {{ x['timeFormatted'] }}
+            </li>
+          </ul>
+        </span>
+        <span id="item2mobile" class="control-content">sry</span>
+        <span id="item3mobile" class="control-content">sry</span>
+      </div>
+
+
+      <div class="bar bar-standard bar-footer">
+        <a class="icon icon-compose pull-left"></a>
+        <a class="icon icon-gear pull-right"></a>
+      </div>
+    </div>
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script>
+    var url = "http://austinschwartz.com:57888/api/";
+    var app = new Vue({
+      el: '.content',
+
+      data: {
+        counts: {},
+        master: {},
+        people: [],
+        clusters: {
+          'moore': "LWSN B146",
+          'pod': "LWSN B148",
+          'sslab': "LWSN B158",
+          'escher': "HAAS G056",
+          'xinu': "HAAS 257",
+          'borg': "HAAS G040",
+        },
+        cluster: '',
+      },
+
+      created: function() {
+        this.regex = this.getUrlParameter('find');
+        this.fetchData();
+      },
+
+      methods: {
+        fetchData: function () {
+          var self = this;
+          $.getJSON( url + 'find?regex=\"' + this.regex + "\"", function( data ) {
+            console.log(data);
+            self.people = data['response'];
+          });
+        },
+
+        getUrlParameter: function(sParam) {
+          var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+              sURLVariables = sPageURL.split('&'),
+              sParameterName,
+              i;
+
+          for (i = 0; i < sURLVariables.length; i++) {
+              sParameterName = sURLVariables[i].split('=');
+              if (sParameterName[0] === sParam) {
+                  return sParameterName[1] === undefined ? true : sParameterName[1];
+              }
+          }
+        }
+      }
+    });
+  </script>
+  </body>
+</html>
