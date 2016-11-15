@@ -2,14 +2,18 @@ import paramiko, base64
 import settings as s
 from collections import OrderedDict
 import threading
+import traceback
 import util
 import time
 import re
-from who import runWhoLocally, formatWho, lname
+import sys
+from who import runWhoLocally, formatWho, lname, freeLabCount
 from pymongo import MongoClient
 from datetime import datetime, timedelta
 from dateutil import tz
 import dateutil.parser
+
+lastTimeStamp = None
 
 lnameDict = lname(s.LDBPATH)
 connections = {}
@@ -29,6 +33,7 @@ clients = []
 mongo = MongoClient(s.MONGODB)
 mongodb = mongo.phrampu
 mongologs = mongodb.logs
+mongocounts = mongodb.counts
 
 def sshAndGetWho(client, hostname):
     s.log('sshing into %s', hostname)
@@ -51,10 +56,23 @@ def sshAndGetWho(client, hostname):
 
 def sshWorker(i, hostname):
     global whoCache
+    global lastTimeStamp
     cluster = hostnameToCluster[hostname]
     whoFormatted = formatWho(sshAndGetWho(clients[i], hostname), lnameDict)
     whoCache[cluster][hostname] = whoFormatted
+    currentTime = datetime.now()
     if s.LOG_TO_MONGO:
+        if i == 1:
+            if lastTimeStamp is None:
+                lastTimeStamp = currentTime
+            else:
+                tenMinsFromNow = currentTime + timedelta(minutes=10)
+                if lastTimeStamp < tenMinsFromNow:
+                    mongocounts.insert_one({
+                      'timestamp': currentTime,
+                      'counts': freeLabCount(whoCache)
+                    }).inserted_id
+                lastTimeStamp = currentTime
         for who in whoFormatted:
             mongologs.insert_one({
                 'hostname': hostname,
@@ -74,8 +92,9 @@ def slaveDriverThread(i):
             try:
                 sshWorker(i, hostname)
             except:
-                e = sys.exc_info()[0]
-                s.log('thread %s broke while connecting to %s: %s', i, hostname, e)
+                e_type, e_value, e_traceback = sys.exc_info()
+                s.log('thread %s broke while connecting to %s: %s', i, hostname, e_value)
+                s.log('stack trace: %s', traceback.format_exc().splitlines())
             time.sleep(5)
     return
 
