@@ -71,7 +71,11 @@ def slaveDriverThread(i):
     while True:
         for hostname in hostnamesChunked[i]:
             s.log('thread %s sshing to %s', i, hostname)
-            sshWorker(i, hostname)
+            try:
+                sshWorker(i, hostname)
+            except:
+                e = sys.exc_info()[0]
+                s.log('thread %s broke while connecting to %s: %s', i, hostname, e)
             time.sleep(5)
     return
 
