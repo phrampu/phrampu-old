@@ -11,6 +11,7 @@ from flask import request
 import settings as s
 import crawler as c
 import who
+import requests
 
 logger = s.logging.getLogger()
 s.getargs(logger)
@@ -51,6 +52,18 @@ def api_cluster(cluster_name):
     js = json.dumps({'response': c.whoCache[cluster_name]})
     resp = Response(js, status=200, mimetype='application/json')
     return resp
+
+@app.route("/api/calendar/<cluster_name>")
+@cross_origin()
+def api_calendar(cluster_name):
+    calendar=s.MACHINES['clusters'][cluster_name]['calendar']
+    data = requests.get("https://clients6.google.com/calendar/v3/calendars/{cal}@group.calendar.google.com/events?calendarId={cal}%40group.calendar.google.com&singleEvents=true&timeZone=America%2FNew_York&maxAttendees=1&maxResults=250&sanitizeHtml=true&timeMin=2016-11-13T00%3A00%3A00-05%3A00&timeMax=2016-11-20T00%3A00%3A00-05%3A00&key=AIzaSyBNlYH01_9Hc5S1J9vuFmu2nUqBZJNAXxs".format(cal=calendar))
+    js = json.dumps({"response": json.loads(data.content.decode())})
+    resp = Response(js, status=200, mimetype='application/json')
+    return resp
+
+# for cal ($(cat ../servers.yaml| grep "calendar" | awk {print })) curl "https://clients6.google.com/calendar/v3/calendars/${cal}@group.calendar.google.com/events?calendarId=${cal}%40group.calendar.google.com&singleEvents=true&timeZone=America%2FNew_York&maxAttendees=1&maxResults=250&sanitizeHtml=true&timeMin=2016-11-13T00%3A00%3A00-05%3A00&timeMax=2016-11-20T00%3A00%3A00-05%3A00&key=AIzaSyBNlYH01_9Hc5S1J9vuFmu2nUqBZJNAXxs" -o $cal
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=s.PORT)
