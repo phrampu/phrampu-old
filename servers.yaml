@@ -179,13 +179,6 @@ clusters:
     room: "TA?"
     hostnames:
       - ta01.cs.purdue.edu
-      - ta02.cs.purdue.edu
-      - ta03.cs.purdue.edu
-      - ta04.cs.purdue.edu
-      - ta05.cs.purdue.edu
-      - ta06.cs.purdue.edu
-      - ta07.cs.purdue.edu
-      - ta08.cs.purdue.edu
       - ta09.cs.purdue.edu
       - ta10.cs.purdue.edu
       - ta11.cs.purdue.edu
@@ -193,22 +186,20 @@ clusters:
       - ta13.cs.purdue.edu
       - ta14.cs.purdue.edu
       - ta15.cs.purdue.edu
-      - ta16.cs.purdue.edu
-      - ta17.cs.purdue.edu
       - ta18.cs.purdue.edu
       - ta19.cs.purdue.edu
-      - ta20.cs.purdue.edu
-      - ta20.cs.purdue.edu
-      - ta21.cs.purdue.edu
       - ta22.cs.purdue.edu
       - ta23.cs.purdue.edu
       - ta24.cs.purdue.edu
-      - ta25.cs.purdue.edu
       - ta26.cs.purdue.edu
       - ta27.cs.purdue.edu
       - ta28.cs.purdue.edu
       - ta29.cs.purdue.edu
-      - ta30.cs.purdue.edu
+      - ta31.cs.purdue.edu
+      - ta32.cs.purdue.edu
+      - ta33.cs.purdue.edu
+      - ta34.cs.purdue.edu
+      - ta35.cs.purdue.edu
   lore:
     hostnames:
       - lore.cs.purdue.edu

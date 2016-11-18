@@ -30,6 +30,7 @@ for cluster in s.MACHINES['clusters']:
 hostnamesChunked = list(util.chunks(hostnames, len(hostnames)//s.THREADS))
 threads = []
 clients = []
+thread_times = []
 mongo = MongoClient(s.MONGODB)
 mongodb = mongo.phrampu
 mongologs = mongodb.logs
@@ -40,14 +41,16 @@ def sshAndGetWho(client, hostname):
     who = []
     try:
         client.connect(
-            hostname, 
-            username=s.USERNAME, 
-            password=s.PASSWORD, 
-            look_for_keys=False
+            hostname,
+            username=s.USERNAME,
+            password=s.PASSWORD,
         )
-        stdin, stdout, stderr = client.exec_command('who')
+        stdin, stdout, stderr = client.exec_command('w')
+        # get rid of first two lines of w output
+        stdout.readline()
+        stdout.readline()
         for line in stdout:
-            who.append(line[:-2])
+            who.append(line)
         client.close()
     except Exception as e:
         s.logerror(e)
@@ -61,6 +64,7 @@ def sshWorker(i, hostname):
     whoFormatted = formatWho(sshAndGetWho(clients[i], hostname), lnameDict)
     whoCache[cluster][hostname] = whoFormatted
     currentTime = datetime.now()
+    thread_times[i] = currentTime
     if s.LOG_TO_MONGO:
         if i == 1:
             if lastTimeStamp is None:
@@ -106,6 +110,7 @@ def spawnThreads():
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         clients.append(client)
         threads.append(t)
+        thread_times.append(datetime.now)
         t.start()
         time.sleep(1.5)
 
