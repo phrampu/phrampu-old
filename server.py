@@ -62,7 +62,12 @@ def api_calendar(cluster_name):
     resp = Response(js, status=200, mimetype='application/json')
     return resp
 
-# for cal ($(cat ../servers.yaml| grep "calendar" | awk {print })) curl "https://clients6.google.com/calendar/v3/calendars/${cal}@group.calendar.google.com/events?calendarId=${cal}%40group.calendar.google.com&singleEvents=true&timeZone=America%2FNew_York&maxAttendees=1&maxResults=250&sanitizeHtml=true&timeMin=2016-11-13T00%3A00%3A00-05%3A00&timeMax=2016-11-20T00%3A00%3A00-05%3A00&key=AIzaSyBNlYH01_9Hc5S1J9vuFmu2nUqBZJNAXxs" -o $cal
+@app.route("/api/log")
+@cross_origin()
+def api_log():
+    js = open("server.log").read()
+    resp = Response(js, status=200, mimetype='application/json')
+    return resp
 
 
 if __name__ == "__main__":
