@@ -209,6 +209,11 @@ clusters:
       - ta28.cs.purdue.edu
       - ta29.cs.purdue.edu
       - ta30.cs.purdue.edu
+      - ta31.cs.purdue.edu
+      - ta32.cs.purdue.edu
+      - ta33.cs.purdue.edu
+      - ta34.cs.purdue.edu
+      - ta35.cs.purdue.edu
   lore:
     hostnames:
       - lore.cs.purdue.edu
