@@ -12,6 +12,7 @@ import settings as s
 import crawler as c
 import who
 import requests
+from datetime import datetime, timedelta
 
 logger = s.logging.getLogger()
 s.getargs(logger)
@@ -69,6 +70,15 @@ def api_log():
     resp = Response(js, status=200, mimetype='application/json')
     return resp
 
+@app.route("/api/threads")
+@cross_origin()
+def api_threads():
+    js = {}
+    for i in range(s.THREADS):
+        js[i] = True if c.thread_times[i] > datetime.now() - timedelta(minutes=10) else False
+    js = json.dumps({"response:": js})
+    resp = Response(js, status=200, mimetype='application/json')
+    return resp
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=s.PORT)

@@ -1,9 +1,9 @@
 To-do:
   - Backend:
-    - [X] Add logging (replace all print stmts)
+    - [x] Add logging (replace all print stmts)
     - [ ] Standardize api responses and document
-      - [ ] Endpoint that just spits out the log file (literally just print it to the screen, would be really nice for debugging)
-      - [ ] Endpoint that spits out a dict of {threadnum: isalive(bool)}. This could easily be implemented by making an array of timestamps, one for each thread. Whenever a thread sshs and returns, get the timestamp from the wholist and replace the old saved thread timestamp. If the timestamp is ever > 10 mins, then its dead.
+      - [x] Endpoint that just spits out the log file (literally just print it to the screen, would be really nice for debugging)
+      - [x] Endpoint that spits out a dict of {threadnum: isalive(bool)}. This could easily be implemented by making an array of timestamps, one for each thread. Whenever a thread sshs and returns, get the timestamp from the wholist and replace the old saved thread timestamp. If the timestamp is ever > 10 mins, then it's dead.
       - [x] Endpoint that spits out a dict of {cluster: 'number of free lab machines'} for frontend use
       - [x] Endpoint that finds the last machine a user was ttyd into
       - [ ] Add idle time based on 'w' script
@@ -15,7 +15,7 @@ To-do:
     - [x] Move everything to a non-shitty web framework: flask/django.
     - [x] Split out thread slave stuff into another file
     - [x] Split out helper functions into another file (util.py or helper.py)
-    - [X] Make hostnames ordered within cluster within master/cluster api calls i.e. {escher: [{escher00}, {escher01}, ...] instead of random order
+    - [x] Make hostnames ordered within cluster within master/cluster api calls i.e. {escher: [{escher00}, {escher01}, ...] instead of random order
   - Frontend:
     - [ ] Filtering by tty/pts
     - [ ] Display traffic graph/heatmap (d3)
