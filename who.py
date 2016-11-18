@@ -28,20 +28,30 @@ def formatWho(who, lnameDict):
     # Second col (tty/pts)
     whoCol2 = [line.split()[1] for line in who]
 
-    whoZip = list(zip(whoCol1, whoCol2))
+    # Fourth col (idle time)
+    whoCol4 = [line.split()[3] for line in who]
+
+    # Last col (what)
+    whoCol5 = [' '.join(line.split()[6:]) for line in who]
+
+    whoZip = list(zip(whoCol1, whoCol2, whoCol4, whoCol5))
 
     whoList = []
-    for (careerAcc, device) in whoZip:
+    for (careerAcc, device, idle, what) in whoZip:
         found = False
         for data in whoList:
             if data['lname']['careerAcc'] == careerAcc:
                 data['devices'].append(device)
+                data['idle_times'].append(idle)
+                data['what'].append(what)
                 found = True
         if not found:
             whoList.append({
                 'lname': lnameDict[careerAcc] if careerAcc in lnameDict else 'None',
                 'timestamp': datetime.datetime.now().isoformat(),
                 'devices': [device],
+                'idle_times': [idle],
+                'what': [what],
             })
 
     return whoList

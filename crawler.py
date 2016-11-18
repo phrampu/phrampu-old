@@ -44,11 +44,13 @@ def sshAndGetWho(client, hostname):
             hostname,
             username=s.USERNAME,
             password=s.PASSWORD,
-            look_for_keys=False
         )
-        stdin, stdout, stderr = client.exec_command('who')
+        stdin, stdout, stderr = client.exec_command('w')
+        # get rid of first two lines of w output
+        stdout.readline()
+        stdout.readline()
         for line in stdout:
-            who.append(line[:-2])
+            who.append(line)
         client.close()
     except Exception as e:
         s.logerror(e)
