@@ -94,9 +94,9 @@ def api_calendar_current(cluster_name):
         end = datetime.strptime(end[:-6], "%Y-%m-%dT%H:%M:%S")
         current = datetime.now() > start and datetime.now() < end
         if current:
-            resp = Response('{{ "response": {{ name: {}, start: {}, end: {}, current: {} }} }}'.format(event['description'], start, end, datetime.now() > start and datetime.now() < end), status=200, mimetype='application/json')
+            resp = Response('{{ "response": {{ "name": {}, "start": {}, "end": {}, "current: {} }} }}'.format(event['description'], start, end, datetime.now() > start and datetime.now() < end), status=200, mimetype='application/json')
 
-    return resp if resp is not None else Response('{"response":{}}', status=200, mimetype='application/json')
+    return resp if resp is not None else Response('{"response":{"current": false}}', status=200, mimetype='application/json')
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=s.PORT)
