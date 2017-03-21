@@ -8,10 +8,10 @@ import time
 import re
 import sys
 from who import runWhoLocally, formatWho, lname, freeLabCount
-from pymongo import MongoClient
 from datetime import datetime, timedelta
 from dateutil import tz
 import dateutil.parser
+import db
 
 lastTimeStamp = None
 
@@ -31,10 +31,6 @@ hostnamesChunked = list(util.chunks(hostnames, len(hostnames)//s.THREADS))
 threads = []
 clients = []
 thread_times = []
-mongo = MongoClient(s.MONGODB)
-mongodb = mongo.phrampu
-mongologs = mongodb.logs
-mongocounts = mongodb.counts
 
 def sshAndGetWho(client, hostname):
     s.log('sshing into %s', hostname)
@@ -72,13 +68,13 @@ def sshWorker(i, hostname):
             else:
                 tenMinsFromNow = currentTime + timedelta(minutes=10)
                 if lastTimeStamp < tenMinsFromNow:
-                    mongocounts.insert_one({
+                    db.mongocounts.insert_one({
                       'timestamp': currentTime,
                       'counts': freeLabCount(whoCache)
                     }).inserted_id
                 lastTimeStamp = currentTime
         for who in whoFormatted:
-            mongologs.insert_one({
+            db.mongologs.insert_one({
                 'hostname': hostname,
                 'cluster': cluster,
                 'devices': who['devices'],
@@ -124,18 +120,25 @@ def formatTime(isotime):
         return est.strftime('%Y-%m-%d %H:%M')
 
 def lastFound(careerAcc):
-    cursor = mongologs.find({'careerAcc': careerAcc}).sort([('timestamp', -1)])
+    s.log('lastFound: %s', careerAcc)
     result = {}
-    for logData in cursor:
-        if 'tty7' in logData['devices']:
-            result['careerAcc'] = careerAcc
-            result['hostname'] = logData['hostname']
-            result['cluster'] = logData['cluster']
-            result['name'] = logData['name']
-            result['timestamp'] = logData['timestamp']
-            result['timeFormatted'] = formatTime(logData['timestamp'])
-            break
+    try:
+        cursor = db.mongologs.find({'careerAcc': careerAcc}).sort([('timestamp', -1)])
+        s.log(str(cursor))
+        for logData in cursor:
+            s.log(logData)
+            if 'tty7' in logData['devices']:
+                result['careerAcc'] = careerAcc
+                result['hostname'] = logData['hostname']
+                result['cluster'] = logData['cluster']
+                result['name'] = logData['name']
+                result['timestamp'] = logData['timestamp']
+                result['timeFormatted'] = formatTime(logData['timestamp'])
+                break
+    except Exception as e:
+        s.log('lastFound failed: ' + str(e))
     return result
+
 
 def anyMatch(pattern, name):
     for n in name.split(' '):
@@ -144,6 +147,7 @@ def anyMatch(pattern, name):
     return False
 
 def find(regex):
+    s.log('finding: ' + regex)
     if len(regex) < 5:
         return {}
     pattern = re.compile(regex[1:-1].lower())
