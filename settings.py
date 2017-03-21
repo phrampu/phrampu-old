@@ -9,11 +9,12 @@ import sys
 PORT = 57888
 LDBPATH = "/p/lname/lname.db"
 THREADS = 4
-PASSWORD = os.environ.get('PHRAMPU_PASS')
-USERNAME = os.environ.get('PHRAMPU_USER')
+PASSWORD = os.environ.get('PHRAMPU_PASSWORD')
+USERNAME = os.environ.get('PHRAMPU_USERNAME')
+CALAPIKEY = os.environ.get('PHRAMPU_CALAPIKEY')
 MACHINES = yaml.load(open('servers.yaml', 'r'))
 MONGODB = 'mongodb://austinschwartz.com:27017/'
-LOG_TO_MONGO = False
+LOG_TO_MONGO = True
 
 def configurelogging():
     with open('filters.yaml', 'r') as the_file:
@@ -45,3 +46,8 @@ def log(*args):
 
 def logerror(e):
     logging.error(e)
+
+getargs(logging.getLogger())
+
+LOGFILE = "server.log"
+logging.basicConfig(filename=LOGFILE, filemode='w', format='%(asctime)s:%(levelname)s:%(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.DEBUG)
