@@ -33,7 +33,7 @@ clients = []
 thread_times = []
 
 def sshAndGetWho(client, hostname):
-    s.log('sshing into %s', hostname)
+    #s.log('sshing into %s', hostname)
     who = []
     try:
         client.connect(
@@ -88,12 +88,12 @@ def sshWorker(i, hostname):
 def slaveDriverThread(i):
     while True:
         for hostname in hostnamesChunked[i]:
-            s.log('thread %s sshing to %s', i, hostname)
+            s.log('site %s sshing to %s', i, hostname)
             try:
                 sshWorker(i, hostname)
             except:
                 e_type, e_value, e_traceback = sys.exc_info()
-                s.log('thread %s broke while connecting to %s: %s', i, hostname, e_value)
+                s.log('site %s broke while connecting to %s: %s', i, hostname, e_value)
                 s.log('stack trace: %s', traceback.format_exc().splitlines())
             time.sleep(5)
     return
