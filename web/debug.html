@@ -17,7 +17,7 @@
           <p>
             <ul>
               <li v-for="(count, cluster) in clusters">
-               <a v-bind:href="yaml['clusters'][cluster]['camera']">{{ yaml['clusters'][cluster]['room'] }}</a> - {{ cluster }} - {{ count }} / {{ maxes[cluster] }}
+               <a v-bind:href="yaml['clusters'][cluster]['camera']">{{ yaml['clusters'][cluster]['room'] }}</a> - {{ cluster }} - {{ maxes[cluster] - count }} / {{ maxes[cluster] }}
               </li>
             </ul>
             </p>
